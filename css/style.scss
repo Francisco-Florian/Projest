@@ -31,6 +31,7 @@ a{
     text-decoration: none;
     color: $color-black;
     font-size: 16px;
+    transition: all 0.3s ease-in-out;
 }
 
 p{
@@ -55,45 +56,62 @@ p{
 // header
 
 header{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 0;
-    >a{
+    position: sticky;
+    top: 0;
+    background-color: $color-white;
+    >div{
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 10px;
-        h1{
-            font-size: 20px;
+        padding: 20px 0;
+        >a{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            h1{
+                font-size: 20px;
+            }
+            img{
+                width: 20px;
+            }
         }
-        img{
-            width: 20px;
+        nav{
+            ul{
+                display: flex;
+                gap: 40px;
+                li{
+                    >a:hover{
+                        color: $background-violet;
+                    }
+                }
+            }
         }
-    }
-    nav{
-        ul{
+        >ul{
             display: flex;
             gap: 20px;
+            li{
+                >a{
+                    padding: 10px 20px;
+                    border-radius: 40px;
+                }
+                #logIn{
+                    box-shadow: 0px 2px 4px rgba(3,3,3,0.1);
+                    color: $color-grey;
+                }
+                #logIn:hover{
+                    padding: 10px 25px;
+                }
+                #signUp{
+                    background-color: $background-violet;
+                    color: $color-white;
+                }
+                #signUp:hover{
+                    padding: 10px 25px;
+                }
+            }
         }
     }
-    >ul{
-        display: flex;
-        gap: 20px;
-        li{
-            >a{
-                padding: 10px 20px;
-                border-radius: 40px;
-            }
-            #logIn{
-                box-shadow: 0px 2px 4px rgba(3,3,3,0.1);
-                color: $color-grey;
-            }
-            #signUp{
-                background-color: $background-violet;
-                color: $color-white;
-            }
-        }
-    }
+    
 }
 
 // footer
@@ -133,6 +151,9 @@ footer{
         padding: 10px 20px;
         border-radius: 40px;
         font-size: 14px;
+    }
+    a:hover{
+        opacity: 0.8;
     }
 
 }
