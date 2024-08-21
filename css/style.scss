@@ -59,11 +59,15 @@ header{
     position: sticky;
     top: 0;
     background-color: $color-white;
+    padding: 0 15px;
     >div{
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 20px 0;
+        .burgerMenu{
+            display: none;
+        }
         >a{
             display: flex;
             align-items: center;
@@ -99,14 +103,14 @@ header{
                     color: $color-grey;
                 }
                 #logIn:hover{
-                    padding: 10px 25px;
+                    padding: 12px 22px;
                 }
                 #signUp{
                     background-color: $background-violet;
                     color: $color-white;
                 }
                 #signUp:hover{
-                    padding: 10px 25px;
+                    padding: 12px 22px;
                 }
             }
         }
@@ -121,7 +125,7 @@ footer{
     justify-content: center;
     text-align: center;
     background-color: $background-lilas;
-    padding: 30px 0;
+    padding: 30px 15px;
     gap: 40px;
     ul{
         display: flex;
@@ -133,7 +137,7 @@ footer{
 
 #section1{
     background-color: $background-lilas;
-    padding: 80px 0;
+    padding: 80px 15px;
     display: grid;
     justify-items: center;
     gap: 40px;
@@ -143,6 +147,7 @@ footer{
     }
     p{
         width: 40%;
+        text-align: center;
     }
     a{
         background-color: $background-violet;
@@ -161,7 +166,7 @@ footer{
 // section 2
 
 #section2{
-    padding: 50px 0;
+    padding: 50px 15px;
     >h2{
         font-size: 36px;
         text-align: center;
@@ -197,7 +202,7 @@ footer{
 
 #section3{
     background-color: $background-grey;
-    padding: 50px 0;
+    padding: 50px 15px;
     h2{
         text-align: center;
         padding: 40px 0;
@@ -230,4 +235,93 @@ footer{
         }
     }
     
+}
+
+
+// responsive
+
+// tablette
+
+@media screen and (max-width: 1024px) {
+
+    // section1 
+
+    #section1{
+        h2{
+            font-size: 30px;
+        }
+        p{
+            width: 60%;
+        }
+    }
+
+    // section2
+
+    #section2{
+        >div .section2Card p{
+            width: 100%;
+        }
+    }
+
+    // section3
+
+    #section3 > div .section3Card p{
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 767px) {
+
+    // header
+
+    header{
+        >div{
+            .burgerMenu{
+                display: block;
+            }
+            nav{
+                display: none;
+            }
+            >ul{
+                display: none;
+            }
+        }
+    }
+
+    // footer
+
+    footer{
+        ul{
+            display: grid;
+            gap: 20px;
+        }
+    }
+
+    // section1
+
+    #section1{
+        padding: 50px 15px;
+        h2{
+            font-size: 30px;
+        }
+        p{
+            width: 100%;
+        }
+    }
+
+    // section2
+
+    #section2{
+        >div{
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // section3
+
+    #section3{
+        >div{
+            grid-template-columns: 1fr;
+        }
+    }
 }
