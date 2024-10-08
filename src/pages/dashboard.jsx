@@ -2,19 +2,36 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import "../style/dashboard.scss";
 import ProjectCard from "../components/projectCard";
 import useAuthStore from '../stores/authStore';
-import { useEffect } from "react";
-
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
-
     const token = useAuthStore((state) => state.token);
     const navigate = useNavigate();
+    
+    // État pour afficher ou non la modale
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [projectName, setProjectName] = useState("");
 
     useEffect(() => {
         if (!token) {
             navigate('/login');
         }
     }, [token, navigate]);
+
+    const handleCreateProjectClick = () => {
+        setIsModalOpen(true); // Ouvre la modale
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log("Project Name: ", projectName); // Remplace par la logique de création du projet
+        setProjectName(""); // Réinitialise le champ après soumission
+        setIsModalOpen(false); // Ferme la modale après soumission
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false); // Ferme la modale si l'utilisateur clique sur le fond
+    };
 
     return (
         <div>
@@ -44,7 +61,7 @@ export default function Dashboard() {
                 <aside id="aside1" aria-label="Active Projects">
                     <div className="aside1-header">
                         <h2>Last Active Projects</h2>
-                        <button id="createProjectBtn">Create Project</button>
+                        <button id="createProjectBtn" onClick={handleCreateProjectClick}>Create Project</button>
                     </div>
                     <div>
                         <ProjectCard />
@@ -63,6 +80,26 @@ export default function Dashboard() {
                     </div>
                 </aside>
             </main>
+
+            {/* Modale */}
+            {isModalOpen && (
+                <div className="modal-overlay" onClick={handleCloseModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close" onClick={handleCloseModal}>&times;</button>
+                        <h2>Create New Project</h2>
+                        <form onSubmit={handleSubmit}>
+                            <input
+                                type="text"
+                                value={projectName}
+                                onChange={(e) => setProjectName(e.target.value)}
+                                placeholder="Project Name"
+                                required
+                            />
+                            <button type="submit">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
