@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom";
 import PropTypes from 'prop-types';
 
-export default function LoginRegisterForm({ buttonValue, linkValue, link, forgotPass }) {
-
+export default function LoginRegisterForm({ buttonValue, linkValue, link, forgotPass, onSubmit }) {
     return (
-
-        <form action="#" method="post">
+        <form action="#" method="post" onSubmit={onSubmit}>
             <label htmlFor="email">Email</label>
             <input type="email" id="email" name="email" placeholder="Enter your email" required />
             <label htmlFor="password">Password</label>
@@ -15,7 +13,6 @@ export default function LoginRegisterForm({ buttonValue, linkValue, link, forgot
             <Link className="button" to={link}>{linkValue}</Link>
             <Link id="forgotPass" to="/forgot-pass">{forgotPass}</Link>
         </form>
-
     )
 }
 
@@ -24,4 +21,5 @@ LoginRegisterForm.propTypes = {
     linkValue: PropTypes.string.isRequired,
     link: PropTypes.string.isRequired,
     forgotPass: PropTypes.string,
+    onSubmit: PropTypes.func
 };

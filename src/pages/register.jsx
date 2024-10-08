@@ -1,21 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import LoginRegisterForm from "../components/login register form";
 import { useNavigate } from 'react-router-dom';
-
+import useAuthStore from '../stores/authStore';
 
 export default function Register() {
+    const navigate = useNavigate();
+    const token = useAuthStore((state) => state.token);
+    const [errorMessage, setErrorMessage] = useState(null);
 
-    const navigate = useNavigate()
-
-    addEventListener('submit', (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const userData = {
-            email: formData.get('email'),
-            password: formData.get('password'),
-        };
-        handleRegister(userData);
-    });
+    // Redirection si l'utilisateur est déjà connecté
+    useEffect(() => {
+        if (token) {
+            navigate('/dashboard');
+        }
+    }, [token, navigate]);
 
     const handleRegister = async (userData) => {
         try {
@@ -29,33 +27,53 @@ export default function Register() {
             });
 
             const data = await response.json();
-            console.log('User registered:', data);
 
-            // Si la requête a été un succès, redirige l'utilisateur vers la page de connexion
             if (response.ok) {
+                // Si la requête est un succès, redirige l'utilisateur vers la page de connexion
                 navigate('/login');
             } else {
-                console.error('Error during registration:', data.message || 'Unknown error');
+                // Gestion des erreurs en fonction du message reçu
+                const errorMsg = data.message?.includes('Email already exists') ? 'This email is already registered.' : 'An error occurred during registration. Please try again.';
+                setErrorMessage(errorMsg);
             }
         } catch (error) {
             console.error('Error registering user:', error);
+            setErrorMessage('An unexpected error occurred. Please try again later.');
         }
-    }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setErrorMessage(null);
+
+        const formData = new FormData(e.target);
+        const userData = {
+            email: formData.get('email'),
+            password: formData.get('password'),
+        };
+
+        handleRegister(userData);
+    };
 
     useEffect(() => {
-        if (!document.body.classList.contains("loginRegister")) {
-            document.body.classList.add("loginRegister");
-        }
+        document.body.classList.add("loginRegister");
         return () => {
             document.body.classList.remove("loginRegister");
-        }
+        };
     }, []);
 
     return (
         <main id="loginRegister">
             <section id="logReg">
-                <LoginRegisterForm buttonValue="Register" linkValue="Log in" link="/login" forgotPass="Forgot password ?" onRegister={handleRegister} />
+                {errorMessage && <p className="errorMessage">{errorMessage}</p>}
+                <LoginRegisterForm 
+                    buttonValue="Register" 
+                    linkValue="Log in" 
+                    link="/login" 
+                    forgotPass="Forgot password ?" 
+                    onSubmit={handleSubmit} // Passe la fonction de soumission comme prop
+                />
             </section>
         </main>
-    )
+    );
 }

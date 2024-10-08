@@ -1,13 +1,20 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import "../style/dashboard.scss";
 import ProjectCard from "../components/projectCard";
 import useAuthStore from '../stores/authStore';
+import { useEffect } from "react";
 
 
 export default function Dashboard() {
 
     const token = useAuthStore((state) => state.token);
-    console.log(token);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!token) {
+            navigate('/login');
+        }
+    }, [token, navigate]);
 
     return (
         <div>
