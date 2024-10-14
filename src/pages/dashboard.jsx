@@ -75,6 +75,7 @@ export default function Dashboard() {
                 method: 'POST',
                 body: JSON.stringify(projectData),
                 headers: {
+                    'Authorization': `Bearer ${token}`,
                     'Content-type': 'application/json; charset=UTF-8',
                 },
             });
