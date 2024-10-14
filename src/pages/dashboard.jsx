@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
 export default function Dashboard() {
     const token = useAuthStore((state) => state.token);
     const navigate = useNavigate();
-    
-    // État pour afficher ou non la modale
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+    const [refreshProjects, setRefreshProjects] = useState(false);  // Nouvel état pour actualiser la liste des projets
 
     useEffect(() => {
         if (!token) {
@@ -19,18 +20,54 @@ export default function Dashboard() {
     }, [token, navigate]);
 
     const handleCreateProjectClick = () => {
-        setIsModalOpen(true); // Ouvre la modale
+        setIsModalOpen(true);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Project Name: ", projectName); // Remplace par la logique de création du projet
-        setProjectName(""); // Réinitialise le champ après soumission
-        setIsModalOpen(false); // Ferme la modale après soumission
+        try {
+            const projectData = { projectName };
+            const response = await handleRegister(projectData);
+
+            if (response.error) {
+                setErrorMessage(response.message);
+            } else {
+                setProjectName("");
+                setIsModalOpen(false);
+                setErrorMessage(null);  // Réinitialiser le message d'erreur en cas de succès
+                setRefreshProjects(!refreshProjects);  // Inverser la valeur pour rafraîchir les projets
+            }
+        } catch (err) {
+            console.error(err);
+            setErrorMessage("An error occurred while creating the project.");
+        }
+    };
+
+    const handleRegister = async (projectData) => {
+        try {
+            const response = await fetch('http://localhost:3000/api/project/create', {
+                method: 'POST',
+                body: JSON.stringify(projectData),
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                },
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                return { error: true, message: data.message };
+            }
+
+            return await response.json();
+        } catch (err) {
+            console.log(err);
+            return { error: true, message: "Network error" };
+        }
     };
 
     const handleCloseModal = () => {
-        setIsModalOpen(false); // Ferme la modale si l'utilisateur clique sur le fond
+        setIsModalOpen(false);
+        setErrorMessage("");  // Réinitialiser le message d'erreur lors de la fermeture de la modale
     };
 
     return (
@@ -63,8 +100,8 @@ export default function Dashboard() {
                         <h2>Last Active Projects</h2>
                         <button id="createProjectBtn" onClick={handleCreateProjectClick}>Create Project</button>
                     </div>
-                    <div>
-                        <ProjectCard />
+                    <div className="projectsContainer">
+                        <ProjectCard refresh={refreshProjects} />
                     </div>
                 </aside>
                 <aside id="aside2" aria-label="Recent Activities">
@@ -87,6 +124,7 @@ export default function Dashboard() {
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <button className="modal-close" onClick={handleCloseModal}>&times;</button>
                         <h2>Create New Project</h2>
+                        {errorMessage && <p className="errorMessage">{errorMessage}</p>}
                         <form onSubmit={handleSubmit}>
                             <input
                                 type="text"

@@ -269,8 +269,8 @@ p {
         }
 
         >div {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
             gap: 20px;
             overflow-y: auto;
 

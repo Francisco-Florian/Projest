@@ -1,12 +1,16 @@
+import PropTypes from 'prop-types';
 import { useEffect, useState } from "react";
 
-export default function ProjectCard() {
+export default function ProjectCard({ refresh }) {
     const [projects, setProjects] = useState([]);
 
-    // Call the API to get the project data
+    ProjectCard.propTypes = {
+        refresh: PropTypes.any.isRequired
+    };
+
     useEffect(() => {
         fetchProjectData();
-    }, []);
+    }, [refresh]);
 
     const fetchProjectData = async () => {
         try {
@@ -29,12 +33,15 @@ export default function ProjectCard() {
     return (
         <>
             {projects.length > 0 ? (
-                projects.slice(-6).map((project) => (
-                    <article key={project.id}>
-                        <h3>{project.title}</h3>
-                        <p>Due date: {new Date(project.dueDate).toLocaleDateString()}</p>
-                    </article>
-                ))
+                projects
+                    .slice(-6) // Obtenez les six derniers projets
+                    .reverse() // Inversez l'ordre pour les afficher de gauche à droite
+                    .map((project) => (
+                        <article key={project.id}>
+                            <h3>{project.title}</h3>
+                            <p>Due date: {new Date(project.dueDate).toLocaleDateString()}</p>
+                        </article>
+                    ))
             ) : (
                 <p>No projects available</p>
             )}
