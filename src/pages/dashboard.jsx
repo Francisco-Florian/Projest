@@ -6,18 +6,44 @@ import { useEffect, useState } from "react";
 
 export default function Dashboard() {
     const token = useAuthStore((state) => state.token);
+    const setToken = useAuthStore((state) => state.setToken); // Ajouté pour gérer la suppression du token
     const navigate = useNavigate();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [projectName, setProjectName] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
-    const [refreshProjects, setRefreshProjects] = useState(false);  // Nouvel état pour actualiser la liste des projets
+    const [refreshProjects, setRefreshProjects] = useState(false);
 
     useEffect(() => {
-        if (!token) {
-            navigate('/login');
-        }
-    }, [token, navigate]);
+        const verifyTokenAndUser = async () => {
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/verify', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Verification failed');
+                }
+
+                await response.json();
+            } catch (err) {
+                console.error("Error verifying user:", err);
+                setToken(null);
+                navigate('/login');
+            }
+        };
+
+        verifyTokenAndUser();
+    }, [token, navigate, setToken]);
 
     const handleCreateProjectClick = () => {
         setIsModalOpen(true);
@@ -34,8 +60,8 @@ export default function Dashboard() {
             } else {
                 setProjectName("");
                 setIsModalOpen(false);
-                setErrorMessage(null);  // Réinitialiser le message d'erreur en cas de succès
-                setRefreshProjects(!refreshProjects);  // Inverser la valeur pour rafraîchir les projets
+                setErrorMessage(null);
+                setRefreshProjects(!refreshProjects);
             }
         } catch (err) {
             console.error(err);
@@ -67,11 +93,11 @@ export default function Dashboard() {
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setErrorMessage("");  // Réinitialiser le message d'erreur lors de la fermeture de la modale
+        setErrorMessage("");
     };
 
     return (
-        <div>
+        <>
             <header id="dashboardHeader">
                 <NavLink to="/">
                     <img src="/Icone.jpeg" alt="Logo" />
@@ -138,6 +164,6 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }
