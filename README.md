@@ -30,7 +30,7 @@ Before you begin, make sure you have the following installed on your machine:
 To run the project in development mode, execute the following command:  
 `npm run dev`
 
-This will start the application locally at: `http://localhost:3000`
+This will start the application locally at: `http://localhost:5173`
 
 ## Key Features
 
