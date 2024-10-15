@@ -1,7 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../style/style.scss';
+import '../style/dropDown.scss';
 import useAuthStore from '../stores/authStore';
+import UserDropdown from '../components/UserDropdown';
 
 const scrollToSection = (e, sectionId) => {
     e.preventDefault();
@@ -15,10 +17,7 @@ const Home = () => {
     const token = useAuthStore((state) => state.token);
     const logOut = useAuthStore((state) => state.logout);
     const showElement = !token;
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
 
-    // handle the log out on th click of the log out button
     const handleLogOut = (e) => {
         e.preventDefault();
         logOut();
@@ -34,24 +33,6 @@ const Home = () => {
             }
         }
     }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    const toggleDropdown = (e) => {
-        e.preventDefault();
-        setDropdownOpen(!dropdownOpen);
-    };
 
     return (
         <>
@@ -77,24 +58,7 @@ const Home = () => {
                     ) : (
                         <ul id='logged'>
                             <li><i className="fa-solid fa-bell notification" /></li>
-                            <li className="dropdown" ref={dropdownRef}>
-                                <img 
-                                    className="userIcone" 
-                                    src="/user_icone.webp" 
-                                    alt="icône utilisateur" 
-                                    onClick={toggleDropdown}
-                                />
-                                {dropdownOpen && (
-                                    <ul className="dropdown-menu">
-                                        <li><Link to="/dashboard">Dashboard</Link></li>
-                                        <li><Link to="/projects">Projects</Link></li>
-                                        <li><Link to="/activity">Activities</Link></li>
-                                        <li><Link to="/teams">Teams</Link></li>
-                                        <li><Link to="/settings">Settings</Link></li>
-                                        <li><Link to="/" onClick={handleLogOut}>Log Out</Link></li>
-                                    </ul>
-                                )}
-                            </li>
+                            <li><UserDropdown onLogout={handleLogOut} /></li>
                         </ul>
                     )}
                     <i className="fa-solid fa-bars burgerMenu" />
@@ -125,78 +89,6 @@ const Home = () => {
                             <i className="fa-solid fa-chart-line analyzeIcone violet" />
                             <h3>Project Analytics</h3>
                             <p>Get detailed insights into your project&apos;s progress with comprehensive analytics and reporting tools.</p>
-                        </article>
-                    </div>
-                </section>
-
-                <section id="section3">
-                    <h2>What Our Users Say</h2>
-                    <div className="container_1250">
-                        <article className="section3Card">
-                            <img src="/sarah johnson.png" alt="sarah johnson" />
-                            <div>
-                                <p>&quot;Projest has revolutionized the way our team works. It&apos;s intuitive and incredibly effective.&quot;</p>
-                                <h3>Sarah Johnson</h3>
-                                <p className="job">Project Manager</p>
-                            </div>
-                        </article>
-                        <article className="section3Card">
-                            <img src="/michael lee.png" alt="michael lee" />
-                            <div>
-                                <p>&quot;The real-time updates and collaboration features have made managing projects a breeze.&quot;</p>
-                                <h3>Michael Lee</h3>
-                                <p className="job">Software Engineer</p>
-                            </div>
-                        </article>
-                        <article className="section3Card">
-                            <img src="/emily davis.png" alt="emily davis" />
-                            <div>
-                                <p>&quot;The analytics tools have provided invaluable insights into our projects progress.&quot;</p>
-                                <h3>Emily Davis</h3>
-                                <p className="job">Marketing Specialist</p>
-                            </div>
-                        </article>
-                    </div>
-                </section>
-
-                <section id="section4">
-                    <h2>Pricing Plans</h2>
-                    <div className="container_1250">
-                        <article className="pricingCard">
-                            <h3>Basic</h3>
-                            <p className="price">$9.99<span>/month</span></p>
-                            <ul>
-                                <li><i className="fa-solid fa-check" /> Up to 5 projects</li>
-                                <li><i className="fa-solid fa-check" /> Basic task tracking</li>
-                                <li><i className="fa-solid fa-check" /> Team collaboration</li>
-                                <li><i className="fa-solid fa-xmark" /> Advanced analytics</li>
-                                <li><i className="fa-solid fa-xmark" /> Priority support</li>
-                            </ul>
-                            <Link to="/choose-plan" className="pricingBtn">Choose Plan</Link>
-                        </article>
-                        <article className="pricingCard featured">
-                            <h3>Pro</h3>
-                            <p className="price">$19.99<span>/month</span></p>
-                            <ul>
-                                <li><i className="fa-solid fa-check" /> Unlimited projects</li>
-                                <li><i className="fa-solid fa-check" /> Advanced task tracking</li>
-                                <li><i className="fa-solid fa-check" /> Team collaboration</li>
-                                <li><i className="fa-solid fa-check" /> Advanced analytics</li>
-                                <li><i className="fa-solid fa-check" /> Priority support</li>
-                            </ul>
-                            <Link to="/choose-plan" className="pricingBtn">Choose Plan</Link>
-                        </article>
-                        <article className="pricingCard">
-                            <h3>Enterprise</h3>
-                            <p className="price">Custom</p>
-                            <ul>
-                                <li><i className="fa-solid fa-check" /> Unlimited projects</li>
-                                <li><i className="fa-solid fa-check" /> Advanced task tracking</li>
-                                <li><i className="fa-solid fa-check" /> Team collaboration</li>
-                                <li><i className="fa-solid fa-check" /> Advanced analytics</li>
-                                <li><i className="fa-solid fa-check" /> 24/7 Premium support</li>
-                            </ul>
-                            <Link to="/contact-us" className="pricingBtn">Contact Us</Link>
                         </article>
                     </div>
                 </section>

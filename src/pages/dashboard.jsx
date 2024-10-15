@@ -1,12 +1,15 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import "../style/dashboard.scss";
+import "../style/dropDown.scss";
 import ProjectCard from "../components/projectCard";
 import useAuthStore from '../stores/authStore';
-import { useEffect, useState } from "react";
+import UserDropdown from '../components/UserDropdown';
 
 export default function Dashboard() {
     const token = useAuthStore((state) => state.token);
-    const setToken = useAuthStore((state) => state.setToken); // Ajouté pour gérer la suppression du token
+    const setToken = useAuthStore((state) => state.setToken);
+    const logOut = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,6 +47,12 @@ export default function Dashboard() {
 
         verifyTokenAndUser();
     }, [token, navigate, setToken]);
+
+    const handleLogOut = (e) => {
+        e.preventDefault();
+        logOut();
+        navigate('/login');
+    };
 
     const handleCreateProjectClick = () => {
         setIsModalOpen(true);
@@ -104,9 +113,9 @@ export default function Dashboard() {
                     <img src="/Icone.jpeg" alt="Logo" />
                     <h1>Projest</h1>
                 </NavLink>
-                <ul>
+                <ul id="logged">
                     <li><i className="fa-solid fa-bell notification" /></li>
-                    <li><img className="userIcone" src="/user_icone.webp" alt="user icone" /></li>
+                    <li><UserDropdown onLogout={handleLogOut} /></li>
                 </ul>
             </header>
             <main id="dashboardMain">
@@ -119,7 +128,6 @@ export default function Dashboard() {
                     </ul>
                     <ul>
                         <li><NavLink to="/settings">Settings</NavLink></li>
-                        <li><Link to="/signout">Sign out</Link></li>
                     </ul>
                 </section>
                 <aside id="aside1" aria-label="Active Projects">
@@ -145,7 +153,6 @@ export default function Dashboard() {
                 </aside>
             </main>
 
-            {/* Modale */}
             {isModalOpen && (
                 <div className="modal-overlay" onClick={handleCloseModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
