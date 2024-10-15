@@ -119,10 +119,10 @@ export default function Dashboard() {
                 </ul>
             </header>
             <main id="dashboardMain">
-                <section className="container_250" id="section1">
+                <section className="container_150" id="section1">
                     <ul>
                         <li><NavLink to="/dashboard">Dashboard</NavLink></li>
-                        <li><NavLink to="/project">Projects</NavLink></li>
+                        <li><NavLink to="/projectList">Projects</NavLink></li>
                         <li><NavLink to="/activities">Activity</NavLink></li>
                         <li><NavLink to="/teams">Teams</NavLink></li>
                     </ul>
