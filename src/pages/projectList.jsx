@@ -32,7 +32,8 @@ export default function ProjectList() {
                 }
 
                 const data = await res.json();
-                setProjects(data.projects);
+                const sortedProjects = data.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                setProjects(sortedProjects);
             } catch (error) {
                 console.error('Error fetching project data:', error);
                 setError('Failed to load projects. Please try again later.');

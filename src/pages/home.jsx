@@ -15,8 +15,34 @@ const scrollToSection = (e, sectionId) => {
 
 const Home = () => {
     const token = useAuthStore((state) => state.token);
+    const setToken = useAuthStore((state) => state.setToken);
     const logOut = useAuthStore((state) => state.logout);
     const showElement = !token;
+
+    useEffect(() => {
+        const verifyTokenAndUser = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/verify', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Verification failed');
+                }
+
+                await response.json();
+            } catch (err) {
+                console.error("Error verifying user:", err);
+                setToken(null);
+            }
+        };
+
+        verifyTokenAndUser();
+    }, [token, setToken]);
 
     const handleLogOut = (e) => {
         e.preventDefault();

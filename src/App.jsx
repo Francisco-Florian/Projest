@@ -5,6 +5,7 @@ import Register from './pages/register';
 import ForgotPass from './pages/forgotPass';
 import Dashboard from './pages/dashboard';
 import ProjectList from './pages/projectList';
+import ProjectPage from './pages/project';
 
 export default function App() {
     return (
@@ -16,6 +17,7 @@ export default function App() {
                 <Route path="/forgot-pass" element={<ForgotPass />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/projectList" element={<ProjectList />} />
+                <Route path="/project/:projectId" element={<ProjectPage />} />
             </Routes>
         </Router>
     );
