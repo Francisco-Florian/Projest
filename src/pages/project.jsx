@@ -47,7 +47,7 @@ export default function ProjectPage() {
             }
 
             const data = await response.json();
-            if (!data || !data.project) {
+            if (!data?.project) {
                 throw new Error('Project data is missing');
             }
 
