@@ -5,6 +5,7 @@ import "../style/dropDown.scss";
 import ProjectCard from "../components/projectCard";
 import useAuthStore from '../stores/authStore';
 import UserDropdown from '../components/UserDropdown';
+import NavMenu from "../components/navMenu";
 
 export default function Dashboard() {
     const token = useAuthStore((state) => state.token);
@@ -119,17 +120,7 @@ export default function Dashboard() {
                 </ul>
             </header>
             <main id="dashboardMain">
-                <section className="container_150" id="section1">
-                    <ul>
-                        <li><NavLink to="/dashboard">Dashboard</NavLink></li>
-                        <li><NavLink to="/projectList">Projects</NavLink></li>
-                        <li><NavLink to="/activities">Activity</NavLink></li>
-                        <li><NavLink to="/teams">Teams</NavLink></li>
-                    </ul>
-                    <ul>
-                        <li><NavLink to="/settings">Settings</NavLink></li>
-                    </ul>
-                </section>
+                <NavMenu />
                 <aside id="aside1" aria-label="Active Projects">
                     <div className="aside1-header">
                         <h2>Last Active Projects</h2>

@@ -3,6 +3,7 @@ import { useParams, NavLink, useNavigate } from 'react-router-dom';
 import UserDropdown from '../components/UserDropdown';
 import useAuthStore from '../stores/authStore';
 import '../style/project.scss';
+import NavMenu from '../components/navMenu';
 
 export default function ProjectPage() {
     const { projectId } = useParams();
@@ -22,7 +23,6 @@ export default function ProjectPage() {
 
     const fetchProjectData = useCallback(async () => {
         if (!token || !projectId) {
-            console.log("Token ou ProjectId manquant:", { token, projectId });
             setIsLoading(false);
             return;
         }
@@ -67,7 +67,6 @@ export default function ProjectPage() {
 
     const verifyTokenAndUser = useCallback(async () => {
         if (!token) {
-            console.log("No token found, redirecting to login");
             navigate('/login');
             return;
         }
@@ -202,17 +201,9 @@ export default function ProjectPage() {
                 </ul>
             </header>
             <main id="projectMain">
-                <nav className="project-nav">
-                    <ul>
-                        <li><NavLink to="/dashboard">Dashboard</NavLink></li>
-                        <li><NavLink to="/projectList" className="active">Projects</NavLink></li>
-                        <li><NavLink to="/activities">Activity</NavLink></li>
-                        <li><NavLink to="/teams">Teams</NavLink></li>
-                    </ul>
-                    <ul>
-                        <li><NavLink to="/settings">Settings</NavLink></li>
-                    </ul>
-                </nav>
+
+                <NavMenu />
+
                 <section className="project-content">
                     <h2>{project.name}</h2>
                     <p>{project.description}</p>
@@ -228,7 +219,7 @@ export default function ProjectPage() {
                                     className="add-task-button"
                                     aria-label={`Add task to ${column.title}`}
                                 >
-                                    <i className="fas fa-plus"></i>
+                                    <i className="fas fa-plus" />
                                 </button>
                                 <div className="kanban-tasks">
                                     {column.items.map((item) => (

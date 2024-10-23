@@ -4,6 +4,7 @@ import "../style/projectList.scss";
 import "../style/dropDown.scss";
 import UserDropdown from '../components/UserDropdown';
 import useAuthStore from '../stores/authStore';
+import NavMenu from "../components/navMenu";
 
 export default function ProjectList() {
     const token = useAuthStore((state) => state.token);
@@ -92,17 +93,7 @@ export default function ProjectList() {
                 </ul>
             </header>
             <main id="projectListMain">
-                <section className="container_150" id="projectListNav">
-                    <ul>
-                        <li><NavLink to="/dashboard">Dashboard</NavLink></li>
-                        <li><NavLink to="/project" className="active">Projects</NavLink></li>
-                        <li><NavLink to="/activities">Activity</NavLink></li>
-                        <li><NavLink to="/teams">Teams</NavLink></li>
-                    </ul>
-                    <ul>
-                        <li><NavLink to="/settings">Settings</NavLink></li>
-                    </ul>
-                </section>
+                <NavMenu />
                 <section id="projectListContent">
                     <h2>All Projects</h2>
                     {(() => {

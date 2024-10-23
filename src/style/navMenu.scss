@@ -1,0 +1,50 @@
+// générale
+
+$Montserrat: 'Montserrat', sans-serif;
+$Roboto: 'Roboto', sans-serif;
+$background-lilas: #e9cdf2;
+$background-violet: #a21bca;
+$background-grey: #f0f0f0;
+$color-blue: #3359f8;
+$color-grey: #737373;
+$color-white: #ffffff;
+$color-black: #000000;
+
+#navMenu {
+    width: 100%;
+    background-color: $background-grey;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    margin-left: 15px;
+    height: calc(100vh - 160px);
+    position: fixed;
+    top: 100px;
+    left: 0;
+    border-radius: 20px;
+
+    ul{
+        display: grid;
+        li{
+            a {
+                display: block;
+                padding: 10px;
+                color: $color-black;
+                text-decoration: none;
+                border-radius: 5px;
+                transition: background-color 0.3s ease, color 0.3s ease;
+
+                &:hover, &.active {
+                    background-color: $background-lilas;
+                    color: $background-violet;
+                }
+            }
+        }
+    }
+
+    :nth-child(1) {
+        margin-top: 10px;
+    }
+}
