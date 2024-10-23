@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, NavLink, useNavigate } from 'react-router-dom';
-import UserDropdown from '../components/UserDropdown';
+import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import '../style/project.scss';
 import NavMenu from '../components/navMenu';
+import HeaderBoard from '../components/headerBoard';
 
 export default function ProjectPage() {
     const { projectId } = useParams();
@@ -18,7 +18,6 @@ export default function ProjectPage() {
     
     const token = useAuthStore((state) => state.token);
     const setToken = useAuthStore((state) => state.setToken);
-    const logOut = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
 
     const fetchProjectData = useCallback(async () => {
@@ -166,12 +165,6 @@ export default function ProjectPage() {
         setErrorMessage('');
     };
 
-    const handleLogOut = (e) => {
-        e.preventDefault();
-        logOut();
-        navigate('/login');
-    };
-
     if (isLoading) {
         return <div className="loading">Loading...</div>;
     }
@@ -186,20 +179,7 @@ export default function ProjectPage() {
 
     return (
         <div className="project-page">
-            <header id="projectHeader">
-                <NavLink to="/">
-                    <img src="/Icone.jpeg" alt="Logo" />
-                    <h1>Projest</h1>
-                </NavLink>
-                <ul id="logged">
-                    <li>
-                        <button aria-label="Notifications">
-                            <i className="fa-solid fa-bell notification" />
-                        </button>
-                    </li>
-                    <li><UserDropdown onLogout={handleLogOut} /></li>
-                </ul>
-            </header>
+            <HeaderBoard />
             <main id="projectMain">
 
                 <NavMenu />

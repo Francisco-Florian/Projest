@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import "../style/projectList.scss";
 import "../style/dropDown.scss";
-import UserDropdown from '../components/UserDropdown';
 import useAuthStore from '../stores/authStore';
 import NavMenu from "../components/navMenu";
+import HeaderBoard from "../components/headerBoard";
 
 export default function ProjectList() {
     const token = useAuthStore((state) => state.token);
     const setToken = useAuthStore((state) => state.setToken);
-    const logOut = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
 
     const [projects, setProjects] = useState([]);
@@ -74,24 +73,9 @@ export default function ProjectList() {
         verifyTokenAndUser();
     }, [token, navigate, setToken]);
 
-    const handleLogOut = (e) => {
-        e.preventDefault();
-        logOut();
-        navigate('/login');
-    };
-
     return (
         <>
-            <header id="projectListHeader">
-                <NavLink to="/">
-                    <img src="/Icone.jpeg" alt="Logo" />
-                    <h1>Projest</h1>
-                </NavLink>
-                <ul id="logged">
-                    <li><i className="fa-solid fa-bell notification" /></li>
-                    <li><UserDropdown onLogout={handleLogOut} /></li>
-                </ul>
-            </header>
+            <HeaderBoard />
             <main id="projectListMain">
                 <NavMenu />
                 <section id="projectListContent">

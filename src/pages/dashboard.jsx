@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../style/dashboard.scss";
 import "../style/dropDown.scss";
 import ProjectCard from "../components/projectCard";
 import useAuthStore from '../stores/authStore';
-import UserDropdown from '../components/UserDropdown';
 import NavMenu from "../components/navMenu";
+import HeaderBoard from "../components/headerBoard";
 
 export default function Dashboard() {
     const token = useAuthStore((state) => state.token);
     const setToken = useAuthStore((state) => state.setToken);
-    const logOut = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,12 +47,6 @@ export default function Dashboard() {
 
         verifyTokenAndUser();
     }, [token, navigate, setToken]);
-
-    const handleLogOut = (e) => {
-        e.preventDefault();
-        logOut();
-        navigate('/login');
-    };
 
     const handleCreateProjectClick = () => {
         setIsModalOpen(true);
@@ -109,16 +102,7 @@ export default function Dashboard() {
 
     return (
         <>
-            <header id="dashboardHeader">
-                <NavLink to="/">
-                    <img src="/Icone.jpeg" alt="Logo" />
-                    <h1>Projest</h1>
-                </NavLink>
-                <ul id="logged">
-                    <li><i className="fa-solid fa-bell notification" /></li>
-                    <li><UserDropdown onLogout={handleLogOut} /></li>
-                </ul>
-            </header>
+            <HeaderBoard />
             <main id="dashboardMain">
                 <NavMenu />
                 <aside id="aside1" aria-label="Active Projects">

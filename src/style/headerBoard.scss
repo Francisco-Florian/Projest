@@ -1,0 +1,61 @@
+// générale
+
+$Montserrat: 'Montserrat', sans-serif;
+$Roboto: 'Roboto', sans-serif;
+$background-lilas: #e9cdf2;
+$background-violet: #a21bca;
+$background-grey: #f0f0f0;
+$color-blue: #3359f8;
+$color-grey: #737373;
+$color-white: #ffffff;
+$color-black: #000000;
+
+
+#headerBoard {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 15px;
+    align-items: center;
+    box-shadow: 0px 2px 10px rgba(3, 3, 3, 0.1);
+    margin-bottom: 20px;
+    height: 40px;
+
+    a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        h1 {
+            font-size: 20px;
+            color: $background-violet;
+        }
+
+        img {
+            width: 20px;
+        }
+    }
+
+    ul {
+        display: flex;
+        gap: 20px;
+
+        li {
+            display: flex;
+            align-items: center;
+
+            .notification {
+                font-size: 16px;
+                padding: 5px;
+                color: $background-violet;
+                cursor: pointer;
+                transition: all 0.3s ease-in-out;
+                border-radius: 50%;
+
+                &:hover {
+                    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+                    transition: all 0.3s ease-in-out;
+                }
+            }
+        }
+    }
+}
