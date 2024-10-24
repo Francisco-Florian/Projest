@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import '../style/project.scss';
@@ -20,92 +20,85 @@ export default function ProjectPage() {
     const setToken = useAuthStore((state) => state.setToken);
     const navigate = useNavigate();
 
-    const fetchProjectData = useCallback(async () => {
-        if (!token || !projectId) {
-            setIsLoading(false);
-            return;
-        }
-
-        try {
-            const response = await fetch(`http://localhost:3000/api/project/${projectId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (response.status === 401) {
-                setToken(null);
+    // Authentication verification hook
+    useEffect(() => {
+        const verifyTokenAndUser = async () => {
+            if (!token) {
                 navigate('/login');
                 return;
             }
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/verify', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                // verify if the request is successful
+                if (!response.ok) {
+                    throw new Error('Verification failed');
+                }
+                // read the response as JSON
+                await response.json();
+            } catch (err) {
+                console.error("Error verifying user:", err);
+                setToken(null);
+                navigate('/login');
             }
+        };
+        verifyTokenAndUser();
+    }, [token, navigate, setToken]);
 
-            const data = await response.json();
-            if (!data?.project) {
-                throw new Error('Project data is missing');
-            }
-
-            setProject(data.project);
-            setColumns(data.columns || {
-                'todo': { title: 'To Do', items: [] },
-                'doing': { title: 'Doing', items: [] },
-                'done': { title: 'Done', items: [] }
-            });
-        } catch (error) {
-            console.error('Error fetching project data:', error);
-            setErrorMessage('Failed to load project data. Please try again later.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [token, projectId, navigate, setToken]);
-
-    const verifyTokenAndUser = useCallback(async () => {
-        if (!token) {
-            navigate('/login');
-            return;
-        }
-
-        if (!projectId) {
-            setErrorMessage('Project ID is missing');
-            setIsLoading(false);
-            return;
-        }
-
-        try {
-            const response = await fetch('http://localhost:3000/api/auth/verify', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Verification failed');
-            }
-
-            await response.json();
-            await fetchProjectData();
-        } catch (err) {
-            console.error("Error verifying user:", err);
-            setToken(null);
-            navigate('/login');
-        }
-    }, [token, navigate, setToken, fetchProjectData, projectId]);
-
+    // Project data loading hook
     useEffect(() => {
         if (!projectId) {
             setErrorMessage('Project ID is missing');
             setIsLoading(false);
             return;
         }
-        verifyTokenAndUser();
-    }, [verifyTokenAndUser, projectId]);
+
+        const fetchProjectData = async () => {
+            try {
+                const response = await fetch(`http://localhost:3000/api/project/${projectId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.status === 401) {
+                    setToken(null);
+                    navigate('/login');
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (!data?.project) {
+                    throw new Error('Project data is missing');
+                }
+
+                setProject(data.project);
+                setColumns(data.columns || {
+                    'todo': { title: 'To Do', items: [] },
+                    'doing': { title: 'Doing', items: [] },
+                    'done': { title: 'Done', items: [] }
+                });
+            } catch (error) {
+                console.error('Error fetching project data:', error);
+                setErrorMessage('Failed to load project data. Please try again later.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProjectData();
+    }, [projectId, token, navigate, setToken]);
 
     const handleNewItemSubmit = async (e) => {
         e.preventDefault();
@@ -139,7 +132,39 @@ export default function ProjectPage() {
                 throw new Error('Failed to create new item');
             }
 
-            await fetchProjectData();
+            // Refresh project data after successful creation
+            const fetchData = async () => {
+                try {
+                    const projectResponse = await fetch(`http://localhost:3000/api/project/${projectId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (!projectResponse.ok) {
+                        throw new Error(`HTTP error! status: ${projectResponse.status}`);
+                    }
+
+                    const data = await projectResponse.json();
+                    if (!data?.project) {
+                        throw new Error('Project data is missing');
+                    }
+
+                    setProject(data.project);
+                    setColumns(data.columns || {
+                        'todo': { title: 'To Do', items: [] },
+                        'doing': { title: 'Doing', items: [] },
+                        'done': { title: 'Done', items: [] }
+                    });
+                } catch (error) {
+                    console.error('Error refreshing project data:', error);
+                    setErrorMessage('Failed to refresh project data. Please try again.');
+                }
+            };
+
+            await fetchData();
             setNewItem('');
             setIsModalOpen(false);
         } catch (error) {
@@ -156,12 +181,12 @@ export default function ProjectPage() {
         setModalType(type);
         setActiveColumn(columnId);
         setIsModalOpen(true);
-        setErrorMessage(''); // Reset error message when opening modal
+        setErrorMessage('');
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setNewItem(''); // Reset input when closing modal
+        setNewItem('');
         setErrorMessage('');
     };
 
@@ -181,14 +206,12 @@ export default function ProjectPage() {
         <div className="project-page">
             <HeaderBoard />
             <main id="projectMain">
-
                 <NavMenu />
-
                 <section className="project-content">
                     <h2>{project.name}</h2>
                     <p>{project.description}</p>
                     <button onClick={() => openModal('column')} className="add-column-button">
-                        Ajouter une colonne
+                        Add a column
                     </button>
                     <div className="kanban-board">
                         {Object.entries(columns).map(([columnId, column]) => (
@@ -218,8 +241,8 @@ export default function ProjectPage() {
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <h3>
                             {modalType === 'task' 
-                                ? 'Ajouter une nouvelle tâche' 
-                                : 'Ajouter une nouvelle colonne'
+                                ? 'Add a new task' 
+                                : 'Add a new column'
                             }
                         </h3>
                         <form onSubmit={handleNewItemSubmit} className="new-item-form">
@@ -228,8 +251,8 @@ export default function ProjectPage() {
                                 value={newItem}
                                 onChange={handleNewItemChange}
                                 placeholder={modalType === 'task' 
-                                    ? 'Entrez une nouvelle tâche' 
-                                    : 'Entrez le nom de la colonne'
+                                    ? 'Enter a new task' 
+                                    : 'Enter the column name'
                                 }
                                 className="new-item-input"
                             />
