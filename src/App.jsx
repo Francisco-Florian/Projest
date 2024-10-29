@@ -6,6 +6,7 @@ import ForgotPass from './pages/forgotPass';
 import Dashboard from './pages/dashboard';
 import ProjectList from './pages/projectList';
 import ProjectPage from './pages/project';
+import LegalMention from './pages/legalMention';
 
 export default function App() {
     return (
@@ -18,6 +19,7 @@ export default function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/projectList" element={<ProjectList />} />
                 <Route path="/project/:projectId" element={<ProjectPage />} />
+                <Route path="/legal-mention" element={<LegalMention />} />
             </Routes>
         </Router>
     );

@@ -13,7 +13,8 @@ export default function ProjectPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
     const [activeColumn, setActiveColumn] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
+    const [modalError, setModalError] = useState('');  // Nouvel état pour les erreurs de modale
+    const [pageError, setPageError] = useState('');    // Nouvel état pour les erreurs de page
     const [isLoading, setIsLoading] = useState(true);
     
     const token = useAuthStore((state) => state.token);
@@ -35,11 +36,9 @@ export default function ProjectPage() {
                         'Content-Type': 'application/json',
                     },
                 });
-                // verify if the request is successful
                 if (!response.ok) {
                     throw new Error('Verification failed');
                 }
-                // read the response as JSON
                 await response.json();
             } catch (err) {
                 console.error("Error verifying user:", err);
@@ -53,7 +52,7 @@ export default function ProjectPage() {
     // Project data loading hook
     useEffect(() => {
         if (!projectId) {
-            setErrorMessage('Project ID is missing');
+            setPageError('Project ID is missing');
             setIsLoading(false);
             return;
         }
@@ -91,7 +90,7 @@ export default function ProjectPage() {
                 });
             } catch (error) {
                 console.error('Error fetching project data:', error);
-                setErrorMessage('Failed to load project data. Please try again later.');
+                setPageError('Failed to load project data. Please try again later.');
             } finally {
                 setIsLoading(false);
             }
@@ -160,16 +159,18 @@ export default function ProjectPage() {
                     });
                 } catch (error) {
                     console.error('Error refreshing project data:', error);
-                    setErrorMessage('Failed to refresh project data. Please try again.');
+                    setModalError('Failed to refresh project data. Please try again.');
+                    return;  // Retourner pour éviter de fermer la modale en cas d'erreur
                 }
             };
 
             await fetchData();
             setNewItem('');
+            setModalError('');  // Effacer les erreurs de modale
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error creating new item:', error);
-            setErrorMessage('Failed to create new item. Please try again.');
+            setModalError('Failed to create new item. Please try again.');  // Afficher l'erreur dans la modale
         }
     };
 
@@ -181,21 +182,21 @@ export default function ProjectPage() {
         setModalType(type);
         setActiveColumn(columnId);
         setIsModalOpen(true);
-        setErrorMessage('');
+        setModalError('');  // Réinitialiser l'erreur de modale à l'ouverture
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
         setNewItem('');
-        setErrorMessage('');
+        setModalError('');  // Réinitialiser l'erreur de modale à la fermeture
     };
 
     if (isLoading) {
         return <div className="loading">Loading...</div>;
     }
 
-    if (errorMessage) {
-        return <div className="error-message">{errorMessage}</div>;
+    if (pageError) {  // Utiliser pageError au lieu de errorMessage pour les erreurs de page
+        return <div className="error-message">{pageError}</div>;
     }
 
     if (!project) {
@@ -245,6 +246,11 @@ export default function ProjectPage() {
                                 : 'Add a new column'
                             }
                         </h3>
+                        {modalError && (  // Afficher l'erreur de modale au-dessus du formulaire
+                            <div className="modal-error">
+                                {modalError}
+                            </div>
+                        )}
                         <form onSubmit={handleNewItemSubmit} className="new-item-form">
                             <input
                                 type="text"
@@ -263,7 +269,6 @@ export default function ProjectPage() {
                         <button onClick={closeModal} className="close-modal-button">
                             Fermer
                         </button>
-                        {errorMessage && <div className="modal-error">{errorMessage}</div>}
                     </div>
                 </div>
             )}
