@@ -128,7 +128,10 @@ export default function ProjectPage() {
             }
 
             if (!response.ok) {
-                throw new Error('Failed to create new item');
+                if (modalType === 'task') {
+                    throw new Error('Failed to create new task');
+                }
+                throw new Error('Failed to create new column');
             }
 
             // Refresh project data after successful creation
@@ -170,7 +173,7 @@ export default function ProjectPage() {
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error creating new item:', error);
-            setModalError('Failed to create new item. Please try again.');  // Afficher l'erreur dans la modale
+            setModalError(error.message);
         }
     };
 
@@ -246,7 +249,7 @@ export default function ProjectPage() {
                                 : 'Add a new column'
                             }
                         </h3>
-                        {modalError && (  // Afficher l'erreur de modale au-dessus du formulaire
+                        {modalError && (  
                             <div className="modal-error">
                                 {modalError}
                             </div>
