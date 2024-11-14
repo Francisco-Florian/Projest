@@ -5,6 +5,7 @@ import "../style/dropDown.scss";
 import useAuthStore from '../stores/authStore';
 import NavMenu from "../components/navMenu";
 import HeaderBoard from "../components/headerBoard";
+import { verifyToken, fetchProjects } from "../api/api";
 
 export default function ProjectList() {
     const token = useAuthStore((state) => state.token);
@@ -15,56 +16,17 @@ export default function ProjectList() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
+
     useEffect(() => {
-        const fetchProjects = async () => {
-            setIsLoading(true);
-            try {
-                const res = await fetch('http://localhost:3000/api/project', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
-                }
-
-                const data = await res.json();
-                const sortedProjects = data.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-                setProjects(sortedProjects);
-            } catch (error) {
-                console.error('Error fetching project data:', error);
-                setError('Failed to load projects. Please try again later.');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         const verifyTokenAndUser = async () => {
             if (!token) {
                 navigate('/login');
                 return;
             }
-
             try {
-                const response = await fetch('http://localhost:3000/api/auth/verify', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Verification failed');
-                }
-
-                await response.json();
-                fetchProjects();
+                await verifyToken(token);
             } catch (err) {
-                console.error("Error verifying user:", err);
+                console.error("Erreur lors de la vérification de l'utilisateur:", err);
                 setToken(null);
                 navigate('/login');
             }
@@ -72,6 +34,39 @@ export default function ProjectList() {
 
         verifyTokenAndUser();
     }, [token, navigate, setToken]);
+
+    useEffect(() => {
+        const initializeData = async () => {
+          if (!token) {
+            navigate('/login');
+            return;
+          }
+    
+          try {
+            await verifyToken(token);
+          } catch (err) {
+            console.error('Erreur lors de la vérification du token:', err);
+            setToken(null);
+            navigate('/login');
+            return;
+          }
+    
+          setIsLoading(true);
+          try {
+            const data = await fetchProjects(token);
+            
+            const sortedProjects = data.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            setProjects(sortedProjects);
+          } catch (error) {
+            console.error('Erreur lors de la récupération des projets:', error);
+            setError('Failed to load projects. Please try again later.');
+          } finally {
+            setIsLoading(false);
+          }
+        };
+    
+        initializeData();
+      }, [token, navigate, setToken]);
 
     return (
         <>

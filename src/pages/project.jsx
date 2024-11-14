@@ -4,6 +4,7 @@ import useAuthStore from '../stores/authStore';
 import '../style/project.scss';
 import NavMenu from '../components/navMenu';
 import HeaderBoard from '../components/headerBoard';
+import { verifyToken } from '../api/api';
 
 export default function ProjectPage() {
     const { projectId } = useParams();
@@ -13,15 +14,14 @@ export default function ProjectPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
     const [activeColumn, setActiveColumn] = useState('');
-    const [modalError, setModalError] = useState('');  // Nouvel état pour les erreurs de modale
-    const [pageError, setPageError] = useState('');    // Nouvel état pour les erreurs de page
+    const [modalError, setModalError] = useState('');
+    const [pageError, setPageError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    
+
     const token = useAuthStore((state) => state.token);
     const setToken = useAuthStore((state) => state.setToken);
     const navigate = useNavigate();
 
-    // Authentication verification hook
     useEffect(() => {
         const verifyTokenAndUser = async () => {
             if (!token) {
@@ -29,23 +29,14 @@ export default function ProjectPage() {
                 return;
             }
             try {
-                const response = await fetch('http://localhost:3000/api/auth/verify', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-                if (!response.ok) {
-                    throw new Error('Verification failed');
-                }
-                await response.json();
+                await verifyToken(token);
             } catch (err) {
-                console.error("Error verifying user:", err);
+                console.error("Erreur lors de la vérification de l'utilisateur:", err);
                 setToken(null);
                 navigate('/login');
             }
         };
+
         verifyTokenAndUser();
     }, [token, navigate, setToken]);
 
@@ -103,14 +94,16 @@ export default function ProjectPage() {
         e.preventDefault();
         if (newItem.trim() === '') return;
 
+        // column
         try {
-            const endpoint = modalType === 'task' 
+            const endpoint = modalType === 'task'
                 ? `http://localhost:3000/api/project/${projectId}/task`
                 : `http://localhost:3000/api/project/${projectId}/column`;
 
             const body = modalType === 'task'
                 ? { content: newItem.trim(), columnId: activeColumn }
                 : { title: newItem.trim() };
+
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -198,7 +191,7 @@ export default function ProjectPage() {
         return <div className="loading">Loading...</div>;
     }
 
-    if (pageError) {  // Utiliser pageError au lieu de errorMessage pour les erreurs de page
+    if (pageError) {
         return <div className="error-message">{pageError}</div>;
     }
 
@@ -221,8 +214,8 @@ export default function ProjectPage() {
                         {Object.entries(columns).map(([columnId, column]) => (
                             <div className="kanban-column" key={columnId}>
                                 <h3>{column.title}</h3>
-                                <button 
-                                    onClick={() => openModal('task', columnId)} 
+                                <button
+                                    onClick={() => openModal('task', columnId)}
                                     className="add-task-button"
                                     aria-label={`Add task to ${column.title}`}
                                 >
@@ -244,12 +237,12 @@ export default function ProjectPage() {
                 <div className="modal-overlay" onClick={closeModal}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <h3>
-                            {modalType === 'task' 
-                                ? 'Add a new task' 
+                            {modalType === 'task'
+                                ? 'Add a new task'
                                 : 'Add a new column'
                             }
                         </h3>
-                        {modalError && (  
+                        {modalError && (
                             <div className="modal-error">
                                 {modalError}
                             </div>
@@ -259,8 +252,8 @@ export default function ProjectPage() {
                                 type="text"
                                 value={newItem}
                                 onChange={handleNewItemChange}
-                                placeholder={modalType === 'task' 
-                                    ? 'Enter a new task' 
+                                placeholder={modalType === 'task'
+                                    ? 'Enter a new task'
                                     : 'Enter the column name'
                                 }
                                 className="new-item-input"

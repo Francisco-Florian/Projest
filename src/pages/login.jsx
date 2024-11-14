@@ -3,6 +3,7 @@ import LoginRegisterForm from "../components/login register form";
 import "../style/register-login.scss";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from '../stores/authStore';
+import { verifyToken, login } from "../api/api";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -10,35 +11,32 @@ export default function Login() {
     const token = useAuthStore((state) => state.token);
     const [errorMessage, setErrorMessage] = useState(null);
 
-    // Redirection si l'utilisateur est déjà connecté
     useEffect(() => {
-        if (token) {
-            navigate('/dashboard');
-        }
-    }, [token, navigate]);
+        const verifyTokenAndUser = async () => {
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+            try {
+                await verifyToken(token);
+                navigate('/dashboard');
+            } catch (err) {
+                console.error("Erreur lors de la vérification de l'utilisateur:", err);
+                setToken(null);
+                navigate('/login');
+            }
+        };
+
+        verifyTokenAndUser();
+    }, [token, navigate, setToken]);
 
     const handleLogin = async (userData) => {
         try {
-            // Envoi des données de connexion à l'API
-            const response = await fetch('http://localhost:3000/api/auth/login', {
-                method: 'POST',
-                body: JSON.stringify(userData),
-                headers: {
-                    'Content-type': 'application/json; charset=UTF-8',
-                },
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                // Si la requête est un succès, enregistrer le token et rediriger
-                setToken(data.token);
-            } else {
-                console.error('Error during login:', data.message || 'Unknown error');
-                setErrorMessage('Username or password incorrect.');
-            }
+            const data = await login(userData);
+            setToken(data.token);
+            navigate('/dashboard');
         } catch (error) {
-            console.error('Error logging in:', error);
+            console.error('Error during login:', error);
             setErrorMessage('An unexpected error occurred. Please try again later.');
         }
     };

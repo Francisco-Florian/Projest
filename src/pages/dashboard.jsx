@@ -6,6 +6,7 @@ import ProjectCard from "../components/projectCard";
 import useAuthStore from '../stores/authStore';
 import NavMenu from "../components/navMenu";
 import HeaderBoard from "../components/headerBoard";
+import { verifyToken } from "../api/api";
 
 export default function Dashboard() {
     const token = useAuthStore((state) => state.token);
@@ -23,23 +24,10 @@ export default function Dashboard() {
                 navigate('/login');
                 return;
             }
-
             try {
-                const response = await fetch('http://localhost:3000/api/auth/verify', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Verification failed');
-                }
-
-                await response.json();
+                await verifyToken(token);
             } catch (err) {
-                console.error("Error verifying user:", err);
+                console.error("Erreur lors de la vérification de l'utilisateur:", err);
                 setToken(null);
                 navigate('/login');
             }
