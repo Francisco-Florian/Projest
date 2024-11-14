@@ -1,5 +1,3 @@
-
-
 const API_URL = 'http://localhost:3000/api';
 
 // verification du token
@@ -68,15 +66,41 @@ export const register = async (userData) => {
 
 export const fetchProjects = async (token) => {
     const response = await fetch(`${API_URL}/project`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
     });
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Erreur lors de la récupération des projets');
+        const error = await response.json();
+        throw new Error(error.message || 'Erreur lors de la récupération des projets');
     }
     return response.json();
-  };
+};
+
+
+// Création de projet
+
+export const createProject = async (token, projectData) => {
+    try {
+        const response = await fetch('http://localhost:3000/api/project/create', {
+            method: 'POST',
+            body: JSON.stringify(projectData),
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            return { error: true, message: data.message || "Error creating project" };
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error("API error:", err);
+        return { error: true, message: "Network error" };
+    }
+};

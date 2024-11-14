@@ -40,7 +40,6 @@ export default function ProjectPage() {
         verifyTokenAndUser();
     }, [token, navigate, setToken]);
 
-    // Project data loading hook
     useEffect(() => {
         if (!projectId) {
             setPageError('Project ID is missing');

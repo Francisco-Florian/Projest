@@ -6,7 +6,7 @@ import ProjectCard from "../components/projectCard";
 import useAuthStore from '../stores/authStore';
 import NavMenu from "../components/navMenu";
 import HeaderBoard from "../components/headerBoard";
-import { verifyToken } from "../api/api";
+import { verifyToken, createProject } from "../api/api";
 
 export default function Dashboard() {
     const token = useAuthStore((state) => state.token);
@@ -44,7 +44,7 @@ export default function Dashboard() {
         e.preventDefault();
         try {
             const projectData = { projectName };
-            const response = await handleRegister(projectData);
+            const response = await createProject(token, projectData);
 
             if (response.error) {
                 setErrorMessage(response.message);
@@ -57,29 +57,6 @@ export default function Dashboard() {
         } catch (err) {
             console.error(err);
             setErrorMessage("An error occurred while creating the project.");
-        }
-    };
-
-    const handleRegister = async (projectData) => {
-        try {
-            const response = await fetch('http://localhost:3000/api/project/create', {
-                method: 'POST',
-                body: JSON.stringify(projectData),
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-type': 'application/json; charset=UTF-8',
-                },
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                return { error: true, message: data.message };
-            }
-
-            return await response.json();
-        } catch (err) {
-            console.log(err);
-            return { error: true, message: "Network error" };
         }
     };
 
