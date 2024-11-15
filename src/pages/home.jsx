@@ -4,6 +4,7 @@ import '../style/style.scss';
 import '../style/dropDown.scss';
 import useAuthStore from '../stores/authStore';
 import UserDropdown from '../components/UserDropdown';
+import { Helmet } from "react-helmet";
 
 const scrollToSection = (e, sectionId) => {
     e.preventDefault();
@@ -62,6 +63,13 @@ const Home = () => {
 
     return (
         <>
+            <Helmet>
+                <title>Projest - Plateforme de gestion de projet</title>
+                <meta
+                    name="description"
+                    content="Découvrez Projest : une plateforme intuitive de gestion de projet. Suivez vos tâches, améliorez la collaboration en équipe, et analysez vos projets avec des outils puissants. Lancez-vous dès aujourd'hui !"
+                />
+            </Helmet>
             <header id="headerHome">
                 <div className="container_1440">
                     <Link to="/">

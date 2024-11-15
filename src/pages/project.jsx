@@ -5,6 +5,7 @@ import '../style/project.scss';
 import NavMenu from '../components/navMenu';
 import HeaderBoard from '../components/headerBoard';
 import { verifyToken } from '../api/api';
+import { Helmet } from 'react-helmet';
 
 export default function ProjectPage() {
     const { projectId } = useParams();
@@ -200,6 +201,13 @@ export default function ProjectPage() {
 
     return (
         <div className="project-page">
+            <Helmet>
+                <title>Projest - {project.name}</title>
+                <meta
+                    name="description"
+                    content={`Organisez les tâches du projet "${project.name}" avec Projest, une solution collaborative pour une gestion efficace.`}
+                />
+            </Helmet>
             <HeaderBoard />
             <main id="projectMain">
                 <NavMenu />

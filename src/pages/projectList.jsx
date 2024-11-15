@@ -6,6 +6,7 @@ import useAuthStore from '../stores/authStore';
 import NavMenu from "../components/navMenu";
 import HeaderBoard from "../components/headerBoard";
 import { verifyToken, fetchProjects } from "../api/api";
+import { Helmet } from "react-helmet";
 
 export default function ProjectList() {
     const token = useAuthStore((state) => state.token);
@@ -37,39 +38,46 @@ export default function ProjectList() {
 
     useEffect(() => {
         const initializeData = async () => {
-          if (!token) {
-            navigate('/login');
-            return;
-          }
-    
-          try {
-            await verifyToken(token);
-          } catch (err) {
-            console.error('Erreur lors de la vérification du token:', err);
-            setToken(null);
-            navigate('/login');
-            return;
-          }
-    
-          setIsLoading(true);
-          try {
-            const data = await fetchProjects(token);
-            
-            const sortedProjects = data.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-            setProjects(sortedProjects);
-          } catch (error) {
-            console.error('Erreur lors de la récupération des projets:', error);
-            setError('Failed to load projects. Please try again later.');
-          } finally {
-            setIsLoading(false);
-          }
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            try {
+                await verifyToken(token);
+            } catch (err) {
+                console.error('Erreur lors de la vérification du token:', err);
+                setToken(null);
+                navigate('/login');
+                return;
+            }
+
+            setIsLoading(true);
+            try {
+                const data = await fetchProjects(token);
+
+                const sortedProjects = data.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                setProjects(sortedProjects);
+            } catch (error) {
+                console.error('Erreur lors de la récupération des projets:', error);
+                setError('Failed to load projects. Please try again later.');
+            } finally {
+                setIsLoading(false);
+            }
         };
-    
+
         initializeData();
-      }, [token, navigate, setToken]);
+    }, [token, navigate, setToken]);
 
     return (
         <>
+            <Helmet>
+                <title>Projects list - Projest</title>
+                <meta
+                    name="description"
+                    content="Découvrez tous vos projets sur Projest. Consultez les détails, suivez les dates limites et organisez efficacement vos tâches."
+                />
+            </Helmet>
             <HeaderBoard />
             <main id="projectListMain">
                 <NavMenu />

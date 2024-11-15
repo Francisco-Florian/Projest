@@ -3,6 +3,7 @@ import LoginRegisterForm from "../components/login register form";
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import { verifyToken, register } from '../api/api';
+import { Helmet } from 'react-helmet';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function Register() {
         const verifyTokenAndRedirect = async () => {
             if (token) {
                 try {
-                    await verifyToken(token); 
+                    await verifyToken(token);
                     navigate('/dashboard');
                 } catch (err) {
                     console.error("Token invalide ou expiré :", err);
@@ -62,17 +63,24 @@ export default function Register() {
     }, []);
 
     return (
-        <main id="loginRegister">
-            <section id="logReg">
-                {errorMessage && <p className="errorMessage">{errorMessage}</p>}
-                <LoginRegisterForm 
-                    buttonValue="Register" 
-                    linkValue="Log in" 
-                    link="/login" 
-                    forgotPass="Forgot password ?" 
-                    onSubmit={handleSubmit} // Passe la fonction de soumission comme prop
-                />
-            </section>
-        </main>
+        <>
+            <Helmet>
+                <title>Register - Projest</title>
+                <meta
+                    name="description"
+                    content="Connectez-vous à Projest pour accéder à vos projets, gérer vos tâches et collaborer efficacement avec votre équipe." />
+            </Helmet><main id="loginRegister">
+                <section id="logReg">
+                    {errorMessage && <p className="errorMessage">{errorMessage}</p>}
+                    <LoginRegisterForm
+                        buttonValue="Register"
+                        linkValue="Log in"
+                        link="/login"
+                        forgotPass="Forgot password ?"
+                        onSubmit={handleSubmit} // Passe la fonction de soumission comme prop
+                    />
+                </section>
+            </main>
+        </>
     );
 }

@@ -4,6 +4,7 @@ import "../style/register-login.scss";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from '../stores/authStore';
 import { verifyToken, login } from "../api/api";
+import { Helmet } from "react-helmet";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -44,7 +45,7 @@ export default function Login() {
     const handleSubmit = (e) => {
         e.preventDefault();
         setErrorMessage(null);
-        
+
         const formData = new FormData(e.target);
         const userData = {
             email: formData.get('email'),
@@ -62,17 +63,23 @@ export default function Login() {
     }, []);
 
     return (
-        <main id="loginRegister">
-            <section id="logReg">
-                {errorMessage && <p className="errorMessage">{errorMessage}</p>}
-                <LoginRegisterForm
-                    buttonValue="Log in"
-                    linkValue="register"
-                    link="/register"
-                    forgotPass="Forgot password ?"
-                    onSubmit={handleSubmit} 
-                />
-            </section>
-        </main>
+        <>
+            <Helmet>
+                <title>Connection - Projest</title>
+                <meta
+                    name="description"
+                    content="Connectez-vous à Projest pour accéder à vos projets, gérer vos tâches et collaborer efficacement avec votre équipe." />
+            </Helmet><main id="loginRegister">
+                <section id="logReg">
+                    {errorMessage && <p className="errorMessage">{errorMessage}</p>}
+                    <LoginRegisterForm
+                        buttonValue="Log in"
+                        linkValue="register"
+                        link="/register"
+                        forgotPass="Forgot password ?"
+                        onSubmit={handleSubmit} />
+                </section>
+            </main>
+        </>
     );
 }

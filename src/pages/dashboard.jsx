@@ -7,6 +7,7 @@ import useAuthStore from '../stores/authStore';
 import NavMenu from "../components/navMenu";
 import HeaderBoard from "../components/headerBoard";
 import { verifyToken, createProject } from "../api/api";
+import { Helmet } from "react-helmet";
 
 export default function Dashboard() {
     const token = useAuthStore((state) => state.token);
@@ -67,6 +68,13 @@ export default function Dashboard() {
 
     return (
         <>
+            <Helmet>
+                <title>Dashboard - Projest</title>
+                <meta
+                    name="description"
+                    content="Accédez à votre tableau de bord Projest. Gérez vos projets, consultez les activités récentes, et créez de nouveaux projets pour une collaboration efficace."
+                />
+            </Helmet>
             <HeaderBoard />
             <main id="dashboardMain">
                 <NavMenu />
