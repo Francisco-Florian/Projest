@@ -58,7 +58,7 @@ export default function Dashboard() {
         } catch (err) {
             console.error(err);
             setErrorMessage("An error occurred while creating the project.");
-        }
+        } 
     };
 
     const handleCloseModal = () => {

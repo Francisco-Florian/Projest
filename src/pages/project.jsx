@@ -127,7 +127,6 @@ export default function ProjectPage() {
                 throw new Error('Failed to create new column');
             }
 
-            // Refresh project data after successful creation
             const fetchData = async () => {
                 try {
                     const projectResponse = await fetch(`http://localhost:3000/api/project/${projectId}`, {
@@ -156,13 +155,13 @@ export default function ProjectPage() {
                 } catch (error) {
                     console.error('Error refreshing project data:', error);
                     setModalError('Failed to refresh project data. Please try again.');
-                    return;  // Retourner pour éviter de fermer la modale en cas d'erreur
+                    return;
                 }
             };
 
             await fetchData();
             setNewItem('');
-            setModalError('');  // Effacer les erreurs de modale
+            setModalError('');
             setIsModalOpen(false);
         } catch (error) {
             console.error('Error creating new item:', error);
@@ -178,13 +177,13 @@ export default function ProjectPage() {
         setModalType(type);
         setActiveColumn(columnId);
         setIsModalOpen(true);
-        setModalError('');  // Réinitialiser l'erreur de modale à l'ouverture
+        setModalError('');
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
         setNewItem('');
-        setModalError('');  // Réinitialiser l'erreur de modale à la fermeture
+        setModalError('');
     };
 
     if (isLoading) {
@@ -202,7 +201,7 @@ export default function ProjectPage() {
     return (
         <div className="project-page">
             <Helmet>
-                <title>Projest - {project.name}</title>
+                <title>Projest - {/*project.name*/}</title>
                 <meta
                     name="description"
                     content={`Organisez les tâches du projet "${project.name}" avec Projest, une solution collaborative pour une gestion efficace.`}

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://projest-back.vercel.app/api';
 
 // verification du token
 
@@ -45,7 +45,7 @@ export const login = async (userData) => {
 // Inscription
 
 export const register = async (userData) => {
-    const response = await fetch('http://localhost:3000/api/auth/register', {
+    const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         body: JSON.stringify(userData),
         headers: {
@@ -84,7 +84,7 @@ export const fetchProjects = async (token) => {
 
 export const createProject = async (token, projectData) => {
     try {
-        const response = await fetch('http://localhost:3000/api/project/create', {
+        const response = await fetch(`${API_URL}/project/create`, {
             method: 'POST',
             body: JSON.stringify(projectData),
             headers: {
