@@ -66,6 +66,21 @@ export default function ProjectPage() {
         loadProject();
     }, [projectId, token]);
 
+    const handleCreateTask = async () => {
+        const taskData = {
+            content: newItem.trim(),
+            columnId: activeColumn,
+        };
+        await createTask(projectId, token, taskData);
+    };
+
+    const handleCreateColumn = async () => {
+        const columnData = {
+            title: newItem.trim(),
+        };
+        await createColumn(projectId, token, columnData);
+    };
+
     // Gestion de la soumission des nouveaux éléments
     const handleNewItemSubmit = async (e) => {
         e.preventDefault();
@@ -73,11 +88,9 @@ export default function ProjectPage() {
 
         try {
             if (modalType === 'task') {
-                const taskData = { content: newItem.trim(), columnId: activeColumn };
-                await createTask(projectId, token, taskData);
+                await handleCreateTask();
             } else if (modalType === 'column') {
-                const columnData = { title: newItem.trim() };
-                await createColumn(projectId, token, columnData);
+                await handleCreateColumn();
             }
 
             const data = await fetchProjectData(projectId, token);
