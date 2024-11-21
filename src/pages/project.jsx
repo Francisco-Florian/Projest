@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
+import { fetchProjectData, createTask, createColumn, verifyToken } from '../api/api';
 import '../style/project.scss';
 import NavMenu from '../components/navMenu';
 import HeaderBoard from '../components/headerBoard';
-import { verifyToken } from '../api/api';
 import { Helmet } from 'react-helmet';
 
 export default function ProjectPage() {
@@ -23,6 +23,7 @@ export default function ProjectPage() {
     const setToken = useAuthStore((state) => state.setToken);
     const navigate = useNavigate();
 
+    // Vérification du token utilisateur
     useEffect(() => {
         const verifyTokenAndUser = async () => {
             if (!token) {
@@ -41,167 +42,70 @@ export default function ProjectPage() {
         verifyTokenAndUser();
     }, [token, navigate, setToken]);
 
+    // Chargement des données du projet
     useEffect(() => {
-        if (!projectId) {
-            setPageError('Project ID is missing');
-            setIsLoading(false);
-            return;
-        }
+        const loadProject = async () => {
+            if (!projectId) {
+                setPageError('Project ID is missing');
+                setIsLoading(false);
+                return;
+            }
 
-        const fetchProjectData = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/api/project/${projectId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (response.status === 401) {
-                    setToken(null);
-                    navigate('/login');
-                    return;
-                }
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                if (!data?.project) {
-                    throw new Error('Project data is missing');
-                }
-
+                const data = await fetchProjectData(projectId, token);
                 setProject(data.project);
-                setColumns(data.columns || {
-                    'todo': { title: 'To Do', items: [] },
-                    'doing': { title: 'Doing', items: [] },
-                    'done': { title: 'Done', items: [] }
-                });
+                setColumns(data.columns || {});
             } catch (error) {
-                console.error('Error fetching project data:', error);
+                console.error('Error loading project data:', error);
                 setPageError('Failed to load project data. Please try again later.');
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchProjectData();
-    }, [projectId, token, navigate, setToken]);
+        loadProject();
+    }, [projectId, token]);
 
+    // Gestion de la soumission des nouveaux éléments
     const handleNewItemSubmit = async (e) => {
         e.preventDefault();
-        if (newItem.trim() === '') return;
+        if (!newItem.trim()) return;
 
-        // column
         try {
-            const endpoint = modalType === 'task'
-                ? `http://localhost:3000/api/project/${projectId}/task`
-                : `http://localhost:3000/api/project/${projectId}/column`;
-
-            const body = modalType === 'task'
-                ? { content: newItem.trim(), columnId: activeColumn }
-                : { title: newItem.trim() };
-
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(body),
-            });
-
-            if (response.status === 401) {
-                setToken(null);
-                navigate('/login');
-                return;
+            if (modalType === 'task') {
+                const taskData = { content: newItem.trim(), columnId: activeColumn };
+                await createTask(projectId, token, taskData);
+            } else if (modalType === 'column') {
+                const columnData = { title: newItem.trim() };
+                await createColumn(projectId, token, columnData);
             }
 
-            if (!response.ok) {
-                if (modalType === 'task') {
-                    throw new Error('Failed to create new task');
-                }
-                throw new Error('Failed to create new column');
-            }
-
-            const fetchData = async () => {
-                try {
-                    const projectResponse = await fetch(`http://localhost:3000/api/project/${projectId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                    });
-
-                    if (!projectResponse.ok) {
-                        throw new Error(`HTTP error! status: ${projectResponse.status}`);
-                    }
-
-                    const data = await projectResponse.json();
-                    if (!data?.project) {
-                        throw new Error('Project data is missing');
-                    }
-
-                    setProject(data.project);
-                    setColumns(data.columns || {
-                        'todo': { title: 'To Do', items: [] },
-                        'doing': { title: 'Doing', items: [] },
-                        'done': { title: 'Done', items: [] }
-                    });
-                } catch (error) {
-                    console.error('Error refreshing project data:', error);
-                    setModalError('Failed to refresh project data. Please try again.');
-                    return;
-                }
-            };
-
-            await fetchData();
-            setNewItem('');
-            setModalError('');
-            setIsModalOpen(false);
+            const data = await fetchProjectData(projectId, token);
+            setProject(data.project);
+            setColumns(data.columns || {});
+            closeModal();
         } catch (error) {
             console.error('Error creating new item:', error);
             setModalError(error.message);
         }
     };
 
-    const handleNewItemChange = (e) => {
-        setNewItem(e.target.value);
-    };
-
-    const openModal = (type, columnId = '') => {
-        setModalType(type);
-        setActiveColumn(columnId);
-        setIsModalOpen(true);
-        setModalError('');
-    };
-
+    // Gestion de la fermeture de la modale
     const closeModal = () => {
         setIsModalOpen(false);
         setNewItem('');
         setModalError('');
     };
 
-    if (isLoading) {
-        return <div className="loading">Loading...</div>;
-    }
-
-    if (pageError) {
-        return <div className="error-message">{pageError}</div>;
-    }
-
-    if (!project) {
-        return <div className="not-found">Project not found</div>;
-    }
+    // Affichage des erreurs ou des états
+    if (isLoading) return <div className="loading">Loading...</div>;
+    if (pageError) return <div className="error-message">{pageError}</div>;
+    if (!project) return <div className="not-found">Project not found</div>;
 
     return (
         <div className="project-page">
             <Helmet>
-                <title>Projest - {/*project.name*/}</title>
+                <title>Projest - {project.projectName}</title>
                 <meta
                     name="description"
                     content={`Organisez les tâches du projet "${project.name}" avec Projest, une solution collaborative pour une gestion efficace.`}
@@ -213,7 +117,13 @@ export default function ProjectPage() {
                 <section className="project-content">
                     <h2>{project.name}</h2>
                     <p>{project.description}</p>
-                    <button onClick={() => openModal('column')} className="add-column-button">
+                    <button
+                        onClick={() => {
+                            setModalType('column');
+                            setIsModalOpen(true);
+                        }}
+                        className="add-column-button"
+                    >
                         Add a column
                     </button>
                     <div className="kanban-board">
@@ -221,7 +131,11 @@ export default function ProjectPage() {
                             <div className="kanban-column" key={columnId}>
                                 <h3>{column.title}</h3>
                                 <button
-                                    onClick={() => openModal('task', columnId)}
+                                    onClick={() => {
+                                        setModalType('task');
+                                        setActiveColumn(columnId);
+                                        setIsModalOpen(true);
+                                    }}
                                     className="add-task-button"
                                     aria-label={`Add task to ${column.title}`}
                                 >
@@ -241,35 +155,29 @@ export default function ProjectPage() {
             </main>
             {isModalOpen && (
                 <div className="modal-overlay" onClick={closeModal}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <h3>
-                            {modalType === 'task'
-                                ? 'Add a new task'
-                                : 'Add a new column'
-                            }
+                            {modalType === 'task' ? 'Add a new task' : 'Add a new column'}
                         </h3>
-                        {modalError && (
-                            <div className="modal-error">
-                                {modalError}
-                            </div>
-                        )}
+                        {modalError && <div className="modal-error">{modalError}</div>}
                         <form onSubmit={handleNewItemSubmit} className="new-item-form">
                             <input
                                 type="text"
                                 value={newItem}
-                                onChange={handleNewItemChange}
-                                placeholder={modalType === 'task'
-                                    ? 'Enter a new task'
-                                    : 'Enter the column name'
+                                onChange={(e) => setNewItem(e.target.value)}
+                                placeholder={
+                                    modalType === 'task'
+                                        ? 'Enter a new task'
+                                        : 'Enter the column name'
                                 }
                                 className="new-item-input"
                             />
                             <button type="submit" className="new-item-button">
-                                Ajouter
+                                Add
                             </button>
                         </form>
                         <button onClick={closeModal} className="close-modal-button">
-                            Fermer
+                            Close
                         </button>
                     </div>
                 </div>

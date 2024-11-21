@@ -105,3 +105,58 @@ export const createProject = async (token, projectData) => {
     }
 };
 
+// fetch des données du projet
+
+export const fetchProjectData = async (projectId, token) => {
+    const response = await fetch(`${API_URL}/project/${projectId}`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+};
+
+// Création de tâche
+
+export const createTask = async (projectId, token, taskData) => {
+    const response = await fetch(`${API_URL}/project/${projectId}/task`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(taskData),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to create new task');
+    }
+
+    return response.json();
+};
+
+// Création de colonne
+
+export const createColumn = async (projectId, token, columnData) => {
+    const response = await fetch(`${API_URL}/project/${projectId}/column`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(columnData),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to create new column');
+    }
+
+    return response.json();
+};
