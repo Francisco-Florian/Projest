@@ -5,6 +5,7 @@ import '../style/dropDown.scss';
 import useAuthStore from '../stores/authStore';
 import UserDropdown from '../components/UserDropdown';
 import { Helmet } from "react-helmet";
+import { verifyToken } from '../api/api';
 
 const scrollToSection = (e, sectionId) => {
     e.preventDefault();
@@ -23,21 +24,9 @@ const Home = () => {
     useEffect(() => {
         const verifyTokenAndUser = async () => {
             try {
-                const response = await fetch('http://localhost:3000/api/auth/verify', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Verification failed');
-                }
-
-                await response.json();
+                await verifyToken(token);
             } catch (err) {
-                console.error("Error verifying user:", err);
+                console.error("Erreur lors de la vérification de l'utilisateur:", err);
                 setToken(null);
             }
         };

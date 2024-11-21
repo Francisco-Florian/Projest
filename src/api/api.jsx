@@ -104,3 +104,4 @@ export const createProject = async (token, projectData) => {
         return { error: true, message: "Network error" };
     }
 };
+
