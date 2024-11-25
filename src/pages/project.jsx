@@ -54,7 +54,7 @@ export default function ProjectPage() {
             try {
                 const data = await fetchProjectData(projectId, token);
                 setProject(data.project);
-                setColumns(data.columns);
+                setColumns(data.columns || {});
             } catch (error) {
                 console.error('Error loading project data:', error);
                 setPageError('Failed to load project data. Please try again later.');
