@@ -1,4 +1,5 @@
-const API_URL = 'https://projest-back.vercel.app/api';
+// const API_URL = 'https://projest-back.vercel.app/api';
+const API_URL = 'http://localhost:3000/api';
 
 // verification du token
 
@@ -65,7 +66,7 @@ export const register = async (userData) => {
 // Appel des projets a la base de données
 
 export const fetchProjects = async (token) => {
-    const response = await fetch(`${API_URL}/project`, {
+    const response = await fetch(`${API_URL}/projects`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -84,7 +85,7 @@ export const fetchProjects = async (token) => {
 
 export const createProject = async (token, projectData) => {
     try {
-        const response = await fetch(`${API_URL}/project/create`, {
+        const response = await fetch(`${API_URL}/projects/create`, {
             method: 'POST',
             body: JSON.stringify(projectData),
             headers: {
@@ -108,7 +109,23 @@ export const createProject = async (token, projectData) => {
 // fetch des données du projet
 
 export const fetchProjectData = async (projectId, token) => {
-    const response = await fetch(`${API_URL}/project/${projectId}`, {
+    const response = await fetch(`${API_URL}/projects/${projectId}`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+};
+
+export const fetchProjectColumns = async (projectId, token) => {
+    const response = await fetch(`${API_URL}/projects/${projectId}/columns`, {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -126,7 +143,7 @@ export const fetchProjectData = async (projectId, token) => {
 // Création de tâche
 
 export const createTask = async (projectId, token, taskData) => {
-    const response = await fetch(`${API_URL}/project/${projectId}/task`, {
+    const response = await fetch(`${API_URL}/projects/${projectId}/task`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -145,7 +162,7 @@ export const createTask = async (projectId, token, taskData) => {
 // Création de colonne
 
 export const createColumn = async (projectId, token, columnData) => {
-    const response = await fetch(`${API_URL}/project/${projectId}/column`, {
+    const response = await fetch(`${API_URL}/projects/${projectId}/columns`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -153,9 +170,11 @@ export const createColumn = async (projectId, token, columnData) => {
         },
         body: JSON.stringify(columnData),
     });
+    console.log(JSON.stringify(columnData));
 
     if (!response.ok) {
-        throw new Error('Failed to create new column');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create new column');
     }
 
     return response.json();

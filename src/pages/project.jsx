@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
-import { fetchProjectData, createTask, createColumn, verifyToken } from '../api/api';
+import {
+    fetchProjectData,
+    createTask,
+    createColumn,
+    verifyToken,
+    fetchProjectColumns,
+} from '../api/api';
 import '../style/project.scss';
 import NavMenu from '../components/navMenu';
 import HeaderBoard from '../components/headerBoard';
@@ -10,7 +16,7 @@ import { Helmet } from 'react-helmet';
 export default function ProjectPage() {
     const { projectId } = useParams();
     const [project, setProject] = useState(null);
-    const [columns, setColumns] = useState({});
+    const [columns, setColumns] = useState([]);
     const [newItem, setNewItem] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
@@ -33,7 +39,7 @@ export default function ProjectPage() {
             try {
                 await verifyToken(token);
             } catch (err) {
-                console.error("Erreur lors de la vérification de l'utilisateur:", err);
+                console.error('Erreur lors de la vérification de l’utilisateur:', err);
                 setToken(null);
                 navigate('/login');
             }
@@ -54,7 +60,8 @@ export default function ProjectPage() {
             try {
                 const data = await fetchProjectData(projectId, token);
                 setProject(data.project);
-                setColumns(data.columns || {});
+                const columnsData = await fetchProjectColumns(projectId, token);
+                setColumns(columnsData.columns || []);
             } catch (error) {
                 console.error('Error loading project data:', error);
                 setPageError('Failed to load project data. Please try again later.');
@@ -66,19 +73,39 @@ export default function ProjectPage() {
         loadProject();
     }, [projectId, token]);
 
+    // Création d'une tâche
     const handleCreateTask = async () => {
         const taskData = {
             content: newItem.trim(),
             columnId: activeColumn,
         };
-        await createTask(projectId, token, taskData);
+
+        try {
+            await createTask(projectId, token, taskData);
+            const updatedColumns = await fetchProjectColumns(projectId, token);
+            setColumns(updatedColumns.columns || []);
+            closeModal();
+        } catch (error) {
+            console.error('Error creating task:', error);
+            setModalError('Failed to create task. Please try again.');
+        }
     };
 
+    // Création d'une colonne
     const handleCreateColumn = async () => {
         const columnData = {
-            title: newItem.trim(),
+            taskColumnName: newItem.trim(),
         };
-        await createColumn(projectId, token, columnData);
+
+        try {
+            await createColumn(projectId, token, columnData);
+            const updatedColumns = await fetchProjectColumns(projectId, token);
+            setColumns(updatedColumns.columns || []);
+            closeModal();
+        } catch (error) {
+            console.error('Error creating column:', error);
+            setModalError('Failed to create column. Please try again.');
+        }
     };
 
     // Gestion de la soumission des nouveaux éléments
@@ -86,20 +113,10 @@ export default function ProjectPage() {
         e.preventDefault();
         if (!newItem.trim()) return;
 
-        try {
-            if (modalType === 'task') {
-                await handleCreateTask();
-            } else if (modalType === 'column') {
-                await handleCreateColumn();
-            }
-
-            const data = await fetchProjectData(projectId, token);
-            setProject(data.project);
-            setColumns(data.columns);
-            closeModal();
-        } catch (error) {
-            console.error('Error creating new item:', error);
-            setModalError(error.message);
+        if (modalType === 'task') {
+            await handleCreateTask();
+        } else if (modalType === 'column') {
+            await handleCreateColumn();
         }
     };
 
@@ -109,7 +126,6 @@ export default function ProjectPage() {
         setNewItem('');
         setModalError('');
     };
-
 
     // Affichage des erreurs ou des états
     if (isLoading) return <div className="loading">Loading...</div>;
@@ -141,24 +157,45 @@ export default function ProjectPage() {
                         Add a column
                     </button>
                     <div className="kanban-board">
-                        {Object.entries(columns).map(([columnId, column]) => (
-                            <div className="kanban-column" key={columnId}>
-                                <h3>{column.title}</h3>
-                                <button
-                                    onClick={() => {
-                                        setModalType('task');
-                                        setActiveColumn(columnId);
-                                        setIsModalOpen(true);
-                                    }}
-                                    className="add-task-button"
-                                    aria-label={`Add task to ${column.title}`}
-                                >
-                                    <i className="fas fa-plus" />
-                                </button>
+                        {columns?.map((column) => (
+                            <div className="kanban-column" key={column.id}>
+                                <div className="column-header">
+                                    <h3>{column.taskColumnName}</h3>
+                                    <div>
+                                        <button
+                                            onClick={() => {
+                                                setModalType('task');
+                                                setActiveColumn(column.id);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="add-task-button"
+                                            aria-label={`Add task to ${column.taskColumnName}`}
+                                        >
+                                            <i className="fas fa-plus" />
+                                        </button>
+                                        {/* Bouton de suppression de la colonne */}
+                                        <button
+                                            // Logique de suppression à ajouter plus tard
+                                            className="delete-column-button"
+                                            aria-label={`Delete ${column.taskColumnName}`}
+                                        >
+                                            <i className="fas fa-trash" />
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div className="kanban-tasks">
-                                    {column.items.map((item) => (
+                                    {(column.items || []).map((item) => (
                                         <div key={item.id} className="task-card">
                                             {item.content}
+                                            {/* Bouton de suppression de la tâche */}
+                                            <button
+                                                // Logique de suppression à ajouter plus tard
+                                                className="delete-task-button"
+                                                aria-label={`Delete task`}
+                                            >
+                                                <i className="fas fa-trash" />
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
