@@ -265,6 +265,21 @@ $color-black: #000000;
         font-family: $Montserrat;
     }
 
+    .delete-modal-button{
+        background-color: #e74c3c;
+        color: $color-white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-right: 10px;
+
+        &:hover {
+            background-color: color.adjust(#e74c3c, $lightness: -10%);
+        }
+    }
+
     .new-item-form {
         display: flex;
         flex-direction: column;
@@ -295,6 +310,8 @@ $color-black: #000000;
                 background-color: color.adjust($background-violet, $lightness: -10%);
             }
         }
+
+        
     }
 
     .close-modal-button {
@@ -312,6 +329,8 @@ $color-black: #000000;
         }
     }
 }
+
+
 
 @media screen and (max-width: 768px) {
     #projectMain {

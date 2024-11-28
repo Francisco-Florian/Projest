@@ -7,6 +7,7 @@ import {
     createColumn,
     verifyToken,
     fetchProjectColumns,
+    deleteColumn,
 } from '../api/api';
 import '../style/project.scss';
 import NavMenu from '../components/navMenu';
@@ -19,6 +20,7 @@ export default function ProjectPage() {
     const [columns, setColumns] = useState([]);
     const [newItem, setNewItem] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
     const [activeColumn, setActiveColumn] = useState('');
     const [modalError, setModalError] = useState('');
@@ -120,9 +122,28 @@ export default function ProjectPage() {
         }
     };
 
+    // Gestion de la suppression
+    const handleDelete = async () => {
+        try {
+            if (modalType === 'column') {
+                console.log('Delete column : ', activeColumn);
+                await deleteColumn(projectId, token, activeColumn);
+                const updatedColumns = await fetchProjectColumns(projectId, token);
+                setColumns(updatedColumns.columns || []);
+                closeModal();
+            }
+        } catch (error) {
+            if(modalType === 'column') {
+                console.error('Error deleting column:', error);
+                setModalError('Failed to delete column. Please try again.');
+            }
+        }
+    };
+
     // Gestion de la fermeture de la modale
     const closeModal = () => {
         setIsModalOpen(false);
+        setIsDeleteModalOpen(false);
         setNewItem('');
         setModalError('');
     };
@@ -178,6 +199,11 @@ export default function ProjectPage() {
                                             // Logique de suppression à ajouter plus tard
                                             className="delete-column-button"
                                             aria-label={`Delete ${column.taskColumnName}`}
+                                            onClick={() => {
+                                                setIsDeleteModalOpen(true);
+                                                setModalType('column');
+                                                setActiveColumn(column.id);
+                                            }}
                                         >
                                             <i className="fas fa-trash" />
                                         </button>
@@ -231,6 +257,23 @@ export default function ProjectPage() {
                             Close
                         </button>
                     </div>
+                </div>
+            )}
+            {isDeleteModalOpen && (
+                <div className='confirmDeleteModal'>
+                    <div className="modal-overlay" onClick={closeModal}>
+                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                            <h3>Confirm deletion</h3>
+                            <p>Are you sure you want to delete this {modalType === 'task' ? 'task' : 'column'}?</p>
+                            <button className="delete-modal-button" onClick={handleDelete}>
+                                Delete
+                            </button>
+                            <button className="close-modal-button" onClick={closeModal}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             )}
         </div>

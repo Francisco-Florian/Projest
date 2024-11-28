@@ -179,3 +179,22 @@ export const createColumn = async (projectId, token, columnData) => {
 
     return response.json();
 };
+
+// suppression de colonne
+
+export const deleteColumn = async (projectId, token, columnId) => {
+    const response = await fetch(`${API_URL}/projects/${projectId}/columns/${columnId}`, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete column');
+    }
+
+    return response.json();
+};
