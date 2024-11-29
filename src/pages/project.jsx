@@ -78,20 +78,34 @@ export default function ProjectPage() {
     // Création d'une tâche
     const handleCreateTask = async () => {
         const taskData = {
-            content: newItem.trim(),
+            taskName: newItem.trim(),
             columnId: activeColumn,
+            projectId,
         };
-
+    
+        // Vérifier les données avant d'envoyer la requête
+        if (!taskData.taskName || !taskData.columnId) {
+            setModalError('Task name and column ID are required.');
+            return;
+        }
+    
         try {
-            await createTask(projectId, token, taskData);
+            // Créer la tâche
+            await createTask(projectId, activeColumn, token, taskData);
+    
+            // Rafraîchir les colonnes après la création
             const updatedColumns = await fetchProjectColumns(projectId, token);
             setColumns(updatedColumns.columns || []);
+    
+            // Réinitialiser l'état et fermer la modale
+            setNewItem('');
             closeModal();
         } catch (error) {
             console.error('Error creating task:', error);
-            setModalError('Failed to create task. Please try again.');
+            setModalError(error.message);
         }
     };
+    
 
     // Création d'une colonne
     const handleCreateColumn = async () => {
@@ -106,7 +120,7 @@ export default function ProjectPage() {
             closeModal();
         } catch (error) {
             console.error('Error creating column:', error);
-            setModalError('Failed to create column. Please try again.');
+            setModalError(error.message);
         }
     };
 
@@ -126,7 +140,6 @@ export default function ProjectPage() {
     const handleDelete = async () => {
         try {
             if (modalType === 'column') {
-                console.log('Delete column : ', activeColumn);
                 await deleteColumn(projectId, token, activeColumn);
                 const updatedColumns = await fetchProjectColumns(projectId, token);
                 setColumns(updatedColumns.columns || []);
@@ -194,9 +207,7 @@ export default function ProjectPage() {
                                         >
                                             <i className="fas fa-plus" />
                                         </button>
-                                        {/* Bouton de suppression de la colonne */}
                                         <button
-                                            // Logique de suppression à ajouter plus tard
                                             className="delete-column-button"
                                             aria-label={`Delete ${column.taskColumnName}`}
                                             onClick={() => {

@@ -142,8 +142,8 @@ export const fetchProjectColumns = async (projectId, token) => {
 
 // Création de tâche
 
-export const createTask = async (projectId, token, taskData) => {
-    const response = await fetch(`${API_URL}/projects/${projectId}/task`, {
+export const createTask = async (projectId, idColumn, token, taskData) => {
+    const response = await fetch(`${API_URL}/projects/${projectId}/columns/${idColumn}/tasks`, {
         method: 'POST',
         headers: {
             Authorization: `Bearer ${token}`,
@@ -153,11 +153,13 @@ export const createTask = async (projectId, token, taskData) => {
     });
 
     if (!response.ok) {
-        throw new Error('Failed to create new task');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create new column');
     }
 
     return response.json();
 };
+
 
 // Création de colonne
 
