@@ -173,9 +173,18 @@ $color-black: #000000;
                     flex-grow: 1;
                     min-height: 100px;
                     overflow-y: auto;
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                }
+
+                .kanban-tasks::-webkit-scrollbar {
+                    display: none;
                 }
 
                 .task-card {
+                    display: flex;
+                    justify-content: space-between;
+                    width: 85%;
                     background-color: $color-white;
                     border-radius: 5px;
                     padding: 10px;
@@ -188,6 +197,32 @@ $color-black: #000000;
                         transform: translateY(-2px);
                         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                     }
+
+                    .task-buttons{
+                        display: flex;
+                        gap: 10px;
+                        .delete-task-button {
+                            background-color: transparent;
+                            border: none;
+                            color: #e74c3c;
+                            font-size: 16px;
+                            cursor: pointer;
+                            transition: transform 0.2s ease;
+                        }
+                    
+                        .edit-task-button {
+                            background-color: transparent;
+                            border: none;
+                            color: $background-violet;
+                            font-size: 16px;
+                            cursor: pointer;
+                            transition: transform 0.2s ease;
+                            margin-left: 10px;
+                    
+                        }
+                    }
+
+                    
                 }
 
                 .add-task-button {

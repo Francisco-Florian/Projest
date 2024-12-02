@@ -241,12 +241,21 @@ export default function ProjectPage() {
                                     {column.tasks?.map((task) => (
                                         <div key={task.id} className="task-card">
                                             {task.taskName}
-                                            <button
-                                                className="delete-task-button"
-                                                aria-label={`Delete task`}
-                                            >
-                                                <i className="fas fa-trash" />
-                                            </button>
+                                            <div className='task-buttons'>
+                                                <button
+                                                    className="edit-task-button"
+                                                    aria-label={`Edit task`}
+                                                >
+                                                    <i className="fa-solid fa-pen" />
+                                                </button>
+                                                <button
+                                                    className="delete-task-button"
+                                                    aria-label={`Delete task`}
+                                                >
+                                                    <i className="fas fa-trash" />
+                                                </button>
+                                            </div>
+
                                         </div>
                                     ))}
                                 </div>
