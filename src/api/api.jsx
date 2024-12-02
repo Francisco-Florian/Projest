@@ -140,6 +140,25 @@ export const fetchProjectColumns = async (projectId, token) => {
     return response.json();
 };
 
+// fetch des tasks
+
+export const fetchTasks = async (projectId, idColumn, token) => {
+    const response = await fetch(`${API_URL}/projects/${projectId}/columns/${idColumn}/tasks`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+};
+
+
 // Création de tâche
 
 export const createTask = async (projectId, idColumn, token, taskData) => {

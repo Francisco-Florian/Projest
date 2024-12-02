@@ -8,6 +8,7 @@ import {
     verifyToken,
     fetchProjectColumns,
     deleteColumn,
+    fetchTasks,
 } from '../api/api';
 import '../style/project.scss';
 import NavMenu from '../components/navMenu';
@@ -62,8 +63,15 @@ export default function ProjectPage() {
             try {
                 const data = await fetchProjectData(projectId, token);
                 setProject(data.project);
-                const columnsData = await fetchProjectColumns(projectId, token);
-                setColumns(columnsData.columns || []);
+                let columnsData = await fetchProjectColumns(projectId, token);
+
+                // Logique de `fetchTasksForColumns`
+                const columnsWithTasks = await Promise.all(columnsData.columns.map(async (column) => {
+                    const tasksData = await fetchTasks(projectId, column.id, token);
+                    return { ...column, tasks: tasksData.tasks || [] };
+                }));
+
+                setColumns(columnsWithTasks);
             } catch (error) {
                 console.error('Error loading project data:', error);
                 setPageError('Failed to load project data. Please try again later.');
@@ -75,6 +83,7 @@ export default function ProjectPage() {
         loadProject();
     }, [projectId, token]);
 
+
     // Création d'une tâche
     const handleCreateTask = async () => {
         const taskData = {
@@ -82,21 +91,27 @@ export default function ProjectPage() {
             columnId: activeColumn,
             projectId,
         };
-    
+
         // Vérifier les données avant d'envoyer la requête
         if (!taskData.taskName || !taskData.columnId) {
             setModalError('Task name and column ID are required.');
             return;
         }
-    
+
         try {
             // Créer la tâche
             await createTask(projectId, activeColumn, token, taskData);
-    
-            // Rafraîchir les colonnes après la création
-            const updatedColumns = await fetchProjectColumns(projectId, token);
-            setColumns(updatedColumns.columns || []);
-    
+
+            // Mettre à jour les tâches de la colonne active
+            const updatedTasks = await fetchTasks(projectId, activeColumn, token);
+            setColumns((prevColumns) =>
+                prevColumns.map((column) =>
+                    column.id === activeColumn
+                        ? { ...column, tasks: updatedTasks.tasks || [] }
+                        : column
+                )
+            );
+
             // Réinitialiser l'état et fermer la modale
             setNewItem('');
             closeModal();
@@ -105,7 +120,8 @@ export default function ProjectPage() {
             setModalError(error.message);
         }
     };
-    
+
+
 
     // Création d'une colonne
     const handleCreateColumn = async () => {
@@ -146,7 +162,7 @@ export default function ProjectPage() {
                 closeModal();
             }
         } catch (error) {
-            if(modalType === 'column') {
+            if (modalType === 'column') {
                 console.error('Error deleting column:', error);
                 setModalError('Failed to delete column. Please try again.');
             }
@@ -222,12 +238,10 @@ export default function ProjectPage() {
                                 </div>
 
                                 <div className="kanban-tasks">
-                                    {(column.items || []).map((item) => (
-                                        <div key={item.id} className="task-card">
-                                            {item.content}
-                                            {/* Bouton de suppression de la tâche */}
+                                    {column.tasks?.map((task) => (
+                                        <div key={task.id} className="task-card">
+                                            {task.taskName}
                                             <button
-                                                // Logique de suppression à ajouter plus tard
                                                 className="delete-task-button"
                                                 aria-label={`Delete task`}
                                             >
@@ -239,6 +253,7 @@ export default function ProjectPage() {
                             </div>
                         ))}
                     </div>
+
                 </section>
             </main>
             {isModalOpen && (
