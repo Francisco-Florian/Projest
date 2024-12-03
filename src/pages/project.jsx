@@ -9,6 +9,7 @@ import {
     fetchProjectColumns,
     deleteColumn,
     fetchTasks,
+    deleteTask,
 } from '../api/api';
 import '../style/project.scss';
 import NavMenu from '../components/navMenu';
@@ -24,6 +25,7 @@ export default function ProjectPage() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
     const [activeColumn, setActiveColumn] = useState('');
+    const [activeTask, setActiveTask] = useState('');
     const [modalError, setModalError] = useState('');
     const [pageError, setPageError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -133,6 +135,13 @@ export default function ProjectPage() {
             await createColumn(projectId, token, columnData);
             const updatedColumns = await fetchProjectColumns(projectId, token);
             setColumns(updatedColumns.columns || []);
+
+            const columnsWithTasks = await Promise.all(updatedColumns.columns.map(async (column) => {
+                const tasksData = await fetchTasks(projectId, column.id, token);
+                return { ...column, tasks: tasksData.tasks || [] };
+            }));
+
+            setColumns(columnsWithTasks);
             closeModal();
         } catch (error) {
             console.error('Error creating column:', error);
@@ -152,13 +161,20 @@ export default function ProjectPage() {
         }
     };
 
-    // Gestion de la suppression
-    const handleDelete = async () => {
+    // Gestion de la suppression d'une colonne
+    const handleDeleteColumn = async () => {
         try {
             if (modalType === 'column') {
                 await deleteColumn(projectId, token, activeColumn);
                 const updatedColumns = await fetchProjectColumns(projectId, token);
                 setColumns(updatedColumns.columns || []);
+
+                const columnsWithTasks = await Promise.all(updatedColumns.columns.map(async (column) => {
+                    const tasksData = await fetchTasks(projectId, column.id, token);
+                    return { ...column, tasks: tasksData.tasks || [] };
+                }));
+
+                setColumns(columnsWithTasks);
                 closeModal();
             }
         } catch (error) {
@@ -168,6 +184,32 @@ export default function ProjectPage() {
             }
         }
     };
+
+    const handleDeleteTask = async () => {
+        try {
+            // Utilisez `activeTask` pour supprimer la tâche
+            await deleteTask(projectId, activeColumn, activeTask, token);
+    
+            // Mise à jour des colonnes après suppression de la tâche
+            const updatedColumns = columns.map((column) => {
+                if (column.id !== activeColumn) {
+                    return column;
+                }
+    
+                const updatedTasks = column.tasks.filter((task) => task.id !== activeTask);
+                return {
+                    ...column,
+                    tasks: updatedTasks,
+                };
+            });
+            setColumns(updatedColumns);
+            closeModal();
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            setModalError('Failed to delete task. Please try again.');
+        }
+    };
+    
 
     // Gestion de la fermeture de la modale
     const closeModal = () => {
@@ -251,6 +293,12 @@ export default function ProjectPage() {
                                                 <button
                                                     className="delete-task-button"
                                                     aria-label={`Delete task`}
+                                                    onClick={() => {
+                                                        setIsDeleteModalOpen(true);
+                                                        setModalType('task');
+                                                        setActiveColumn(column.id); // Définit la colonne dans laquelle la tâche se trouve
+                                                        setActiveTask(task.id); // Définit la tâche qui doit être supprimée
+                                                    }}
                                                 >
                                                     <i className="fas fa-trash" />
                                                 </button>
@@ -300,7 +348,16 @@ export default function ProjectPage() {
                         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                             <h3>Confirm deletion</h3>
                             <p>Are you sure you want to delete this {modalType === 'task' ? 'task' : 'column'}?</p>
-                            <button className="delete-modal-button" onClick={handleDelete}>
+                            <button
+                                className="delete-modal-button"
+                                onClick={() => {
+                                    if (modalType === 'column') {
+                                        handleDeleteColumn();
+                                    } else if (modalType === 'task') {
+                                        handleDeleteTask(); // Pas besoin de passer d'arguments ici
+                                    }
+                                }}
+                            >
                                 Delete
                             </button>
                             <button className="close-modal-button" onClick={closeModal}>
@@ -308,9 +365,9 @@ export default function ProjectPage() {
                             </button>
                         </div>
                     </div>
-
                 </div>
             )}
+
         </div>
     );
 }

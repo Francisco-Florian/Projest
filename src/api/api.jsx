@@ -219,3 +219,23 @@ export const deleteColumn = async (projectId, token, columnId) => {
 
     return response.json();
 };
+
+// suppression de tâche
+
+export const deleteTask = async (projectId, columnId, taskId, token) => {
+    const response = await fetch(`${API_URL}/projects/${projectId}/columns/${columnId}/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete task');
+    }
+
+    return response.json();
+};
+
