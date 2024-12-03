@@ -10,6 +10,7 @@ import {
     deleteColumn,
     fetchTasks,
     deleteTask,
+    updateTask,
 } from '../api/api';
 import '../style/project.scss';
 import NavMenu from '../components/navMenu';
@@ -26,6 +27,9 @@ export default function ProjectPage() {
     const [modalType, setModalType] = useState('');
     const [activeColumn, setActiveColumn] = useState('');
     const [activeTask, setActiveTask] = useState('');
+    const [taskDescription, setTaskDescription] = useState(''); // Pour stocker la description de la tâche
+    const [taskDeadline, setTaskDeadline] = useState('');       // Pour stocker l'échéance de la tâche
+    // const [taskOrder, setTaskOrder] = useState(null);
     const [modalError, setModalError] = useState('');
     const [pageError, setPageError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -189,13 +193,13 @@ export default function ProjectPage() {
         try {
             // Utilisez `activeTask` pour supprimer la tâche
             await deleteTask(projectId, activeColumn, activeTask, token);
-    
+
             // Mise à jour des colonnes après suppression de la tâche
             const updatedColumns = columns.map((column) => {
                 if (column.id !== activeColumn) {
                     return column;
                 }
-    
+
                 const updatedTasks = column.tasks.filter((task) => task.id !== activeTask);
                 return {
                     ...column,
@@ -209,7 +213,78 @@ export default function ProjectPage() {
             setModalError('Failed to delete task. Please try again.');
         }
     };
+
+    const handleUpdateTask = async () => {
+        try {
+            if (!activeTask) {
+                throw new Error('No task selected for update');
+            }
     
+            const currentColumn = columns.find((column) => column.id === activeColumn);
+            const currentTask = currentColumn?.tasks.find((task) => task.id === activeTask);
+    
+            if (!currentTask) {
+                console.error('Task not found');
+                return;
+            }
+    
+            // Conserver les données actuelles de la tâche
+            const taskData = {
+                taskName: newItem.trim(),
+                description: taskDescription,
+                taskDeadline: taskDeadline,
+                taskOrder: currentTask.taskOrder, // Conserver la valeur actuelle de `taskOrder`
+            };
+    
+            // Appel de l'API pour mettre à jour la tâche
+            await updateTask(projectId, activeColumn, activeTask, token, taskData);
+    
+            const updatedColumns = updateColumnsAfterTaskUpdate(columns, activeColumn, activeTask, taskData);
+    
+            setColumns(updatedColumns);
+    
+            resetTaskForm();
+        } catch (error) {
+            console.error('Error updating task:', error);
+            setModalError(error.message);
+        }
+    };
+    
+    // Fonction utilitaire pour mettre à jour les colonnes après la mise à jour d'une tâche
+    const updateColumnsAfterTaskUpdate = (columns, columnId, taskId, updatedTaskData) => {
+        return columns.map((column) => {
+            if (column.id !== columnId) {
+                return column;
+            }
+    
+            // Mise à jour des tâches dans la colonne active
+            const updatedTasks = column.tasks.map((task) =>
+                task.id === taskId ? { ...task, ...updatedTaskData } : task
+            );
+    
+            return {
+                ...column,
+                tasks: updatedTasks,
+            };
+        });
+    };
+    
+    // Fonction pour réinitialiser les champs de saisie après l'opération
+    const resetTaskForm = () => {
+        setNewItem('');
+        setTaskDescription('');
+        setTaskDeadline('');
+        closeModal();
+    };
+    
+    
+    
+    
+    
+    
+    
+
+
 
     // Gestion de la fermeture de la modale
     const closeModal = () => {
@@ -287,6 +362,15 @@ export default function ProjectPage() {
                                                 <button
                                                     className="edit-task-button"
                                                     aria-label={`Edit task`}
+                                                    onClick={() => {
+                                                        setIsModalOpen(true);
+                                                        setModalType('taskEdit');
+                                                        setActiveColumn(column.id);
+                                                        setActiveTask(task.id);
+                                                        setNewItem(task.taskName);
+                                                        setTaskDescription(task.description);
+                                                        setTaskDeadline(task.taskDeadline);
+                                                    }}
                                                 >
                                                     <i className="fa-solid fa-pen" />
                                                 </button>
@@ -367,6 +451,46 @@ export default function ProjectPage() {
                     </div>
                 </div>
             )}
+            {isModalOpen && modalType === 'taskEdit' && (
+                <div className="modal-overlay" onClick={closeModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <h3>Edit Task</h3>
+                        {modalError && <div className="modal-error">{modalError}</div>}
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            handleUpdateTask();
+                        }} className="new-item-form">
+                            <input
+                                type="text"
+                                value={newItem}
+                                onChange={(e) => setNewItem(e.target.value)}
+                                placeholder="Enter the updated task name"
+                                className="new-item-input"
+                            />
+                            <textarea
+                                type="text"
+                                value={taskDescription}
+                                onChange={(e) => setTaskDescription(e.target.value)}
+                                placeholder="Enter the updated description"
+                                className="new-item-input"
+                            />
+                            <input
+                                type="date"
+                                value={taskDeadline}
+                                onChange={(e) => setTaskDeadline(e.target.value)}
+                                className="new-item-input"
+                            />
+                            <button type="submit" className="new-item-button">
+                                Update Task
+                            </button>
+                        </form>
+                        <button onClick={closeModal} className="close-modal-button">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
 
         </div>
     );

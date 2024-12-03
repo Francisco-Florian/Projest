@@ -239,3 +239,24 @@ export const deleteTask = async (projectId, columnId, taskId, token) => {
     return response.json();
 };
 
+
+// Met à jour une tâche spécifique
+export const updateTask = async (projectId, columnId, taskId, token, taskData) => {
+    const response = await fetch(`${API_URL}/projects/${projectId}/columns/${columnId}/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(taskData),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update task');
+    }
+
+    return response.json();
+};
+
+
