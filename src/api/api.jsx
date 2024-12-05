@@ -106,6 +106,25 @@ export const createProject = async (token, projectData) => {
     }
 };
 
+// Suppression de projet
+
+export const deleteProject = async (projectId, token) => {
+    const response = await fetch(`${API_URL}/projects/${projectId}`, {
+        method: 'DELETE',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete project');
+    }
+
+    return response.json();
+};
+
 // fetch des données du projet
 
 export const fetchProjectData = async (projectId, token) => {

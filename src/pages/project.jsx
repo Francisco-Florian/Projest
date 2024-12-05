@@ -216,33 +216,57 @@ export default function ProjectPage() {
 
     const handleUpdateTask = async () => {
         try {
-            if (!activeTask) {
-                throw new Error('No task selected for update');
+    
+            // Vérifier que `activeColumn` et `activeTask` sont définis
+            if (!activeColumn) {
+                throw new Error('No column selected');
             }
     
-            const currentColumn = columns.find((column) => column.id === activeColumn);
-            const currentTask = currentColumn?.tasks.find((task) => task.id === activeTask);
+            if (!activeTask) {
+                throw new Error('No task selected');
+            }
     
-            if (!currentTask) {
-                console.error('Task not found');
+            // Récupérer la colonne actuelle qui contient la tâche
+            const currentColumn = columns.find((column) =>
+                column.tasks.some((task) => task.id === activeTask)
+            );
+    
+            if (!currentColumn) {
+                console.error('Column not found for task:', activeTask);
+                setModalError('Column not found for task');
                 return;
             }
     
-            // Conserver les données actuelles de la tâche
+            const currentTask = currentColumn.tasks.find((task) => task.id === activeTask);
+    
+            if (!currentTask) {
+                console.error('Task not found:', activeTask);
+                setModalError('Task not found');
+                return;
+            }
+    
+            // Conserver les données actuelles de la tâche et ajouter les nouvelles données
+            const newTaskOrder = activeColumn !== currentColumn.id
+                ? columns.find((col) => col.id === activeColumn)?.tasks.length + 1
+                : currentTask.taskOrder;
+    
             const taskData = {
-                taskName: newItem.trim(),
-                description: taskDescription,
-                taskDeadline: taskDeadline,
-                taskOrder: currentTask.taskOrder, // Conserver la valeur actuelle de `taskOrder`
+                ...currentTask, // Conserver les données actuelles de la tâche
+                taskName: newItem.trim() || currentTask.taskName,
+                description: taskDescription || currentTask.description,
+                taskDeadline: taskDeadline || currentTask.taskDeadline,
+                columnId: activeColumn,
+                taskOrder: newTaskOrder,
             };
     
             // Appel de l'API pour mettre à jour la tâche
-            await updateTask(projectId, activeColumn, activeTask, token, taskData);
+            await updateTask(projectId, currentColumn.id, activeTask, token, taskData);
     
-            const updatedColumns = updateColumnsAfterTaskUpdate(columns, activeColumn, activeTask, taskData);
-    
+            // Mise à jour de la colonne dans l'état local
+            const updatedColumns = updateColumnsAfterTaskUpdate(columns, currentColumn.id, taskData);
             setColumns(updatedColumns);
     
+            // Réinitialiser les champs du formulaire
             resetTaskForm();
         } catch (error) {
             console.error('Error updating task:', error);
@@ -251,38 +275,62 @@ export default function ProjectPage() {
     };
     
     // Fonction utilitaire pour mettre à jour les colonnes après la mise à jour d'une tâche
-    const updateColumnsAfterTaskUpdate = (columns, columnId, taskId, updatedTaskData) => {
+    const updateColumnsAfterTaskUpdate = (columns, originalColumnId, updatedTaskData) => {
         return columns.map((column) => {
-            if (column.id !== columnId) {
-                return column;
+            if (column.id === originalColumnId) {
+
+                if (updatedTaskData.columnId === originalColumnId) {
+                    return {
+                        ...column,
+                        tasks: column.tasks.map((task) =>
+                            task.id === updatedTaskData.id ? { ...task, ...updatedTaskData } : task
+                        ),
+                    };
+                }
+    
+                return {
+                    ...column,
+                    tasks: column.tasks.filter((task) => task.id !== updatedTaskData.id),
+                };
             }
     
-            // Mise à jour des tâches dans la colonne active
-            const updatedTasks = column.tasks.map((task) =>
-                task.id === taskId ? { ...task, ...updatedTaskData } : task
-            );
+            if (column.id === updatedTaskData.columnId) {
+                return {
+                    ...column,
+                    tasks: [...column.tasks, updatedTaskData],
+                };
+            }
     
-            return {
-                ...column,
-                tasks: updatedTasks,
-            };
+            return column;
         });
     };
     
+    
+    
+    
+    
+
+    
+
+
+
+
     // Fonction pour réinitialiser les champs de saisie après l'opération
     const resetTaskForm = () => {
         setNewItem('');
         setTaskDescription('');
         setTaskDeadline('');
+        setActiveColumn('');
+        setActiveTask('');
         closeModal();
     };
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
 
 
 
@@ -365,8 +413,8 @@ export default function ProjectPage() {
                                                     onClick={() => {
                                                         setIsModalOpen(true);
                                                         setModalType('taskEdit');
-                                                        setActiveColumn(column.id);
-                                                        setActiveTask(task.id);
+                                                        setActiveColumn(column.id); // Définit la colonne active
+                                                        setActiveTask(task.id); // Définit la tâche active
                                                         setNewItem(task.taskName);
                                                         setTaskDescription(task.description);
                                                         setTaskDeadline(task.taskDeadline);
@@ -380,8 +428,8 @@ export default function ProjectPage() {
                                                     onClick={() => {
                                                         setIsDeleteModalOpen(true);
                                                         setModalType('task');
-                                                        setActiveColumn(column.id); // Définit la colonne dans laquelle la tâche se trouve
-                                                        setActiveTask(task.id); // Définit la tâche qui doit être supprimée
+                                                        setActiveColumn(column.id);
+                                                        setActiveTask(task.id);
                                                     }}
                                                 >
                                                     <i className="fas fa-trash" />
@@ -438,7 +486,7 @@ export default function ProjectPage() {
                                     if (modalType === 'column') {
                                         handleDeleteColumn();
                                     } else if (modalType === 'task') {
-                                        handleDeleteTask(); // Pas besoin de passer d'arguments ici
+                                        handleDeleteTask();
                                     }
                                 }}
                             >
@@ -469,6 +517,7 @@ export default function ProjectPage() {
                             />
                             <textarea
                                 type="text"
+                                rows={10}
                                 value={taskDescription}
                                 onChange={(e) => setTaskDescription(e.target.value)}
                                 placeholder="Enter the updated description"
@@ -480,6 +529,19 @@ export default function ProjectPage() {
                                 onChange={(e) => setTaskDeadline(e.target.value)}
                                 className="new-item-input"
                             />
+                            <select
+                                value={activeColumn}
+                                onChange={(e) => setActiveColumn(parseInt(e.target.value, 10))}
+                                className="column-select"
+                            >
+                                {columns.map((column) => (
+                                    <option key={column.id} value={column.id}>
+                                        {column.taskColumnName}
+                                    </option>
+                                ))}
+                            </select>
+
+
                             <button type="submit" className="new-item-button">
                                 Update Task
                             </button>
@@ -490,6 +552,7 @@ export default function ProjectPage() {
                     </div>
                 </div>
             )}
+
 
 
         </div>
