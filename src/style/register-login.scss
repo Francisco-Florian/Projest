@@ -70,6 +70,13 @@ a{
     color: red;
 }
 
+.fieldError {
+    color: red;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+
 #logReg{
     display: grid;
     background-color: $color-white;

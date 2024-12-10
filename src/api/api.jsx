@@ -46,21 +46,31 @@ export const login = async (userData) => {
 // Inscription
 
 export const register = async (userData) => {
-    const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        body: JSON.stringify(userData),
-        headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-        },
-    });
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            body: JSON.stringify(userData),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            },
+        });
 
-    const data = await response.json();
-    if (response.ok) {
+        const data = await response.json();
+
+        if (!response.ok) {
+            // Retourner le message et le champ concerné
+            const error = new Error(data.message);
+            error.field = data.field;
+            throw error;
+        }
+
         return { success: true, data };
-    } else {
-        return { success: false, message: data.message };
+    } catch (error) {
+        return { success: false, message: error.message, field: error.field };
     }
 };
+
+
 
 
 // Appel des projets a la base de données

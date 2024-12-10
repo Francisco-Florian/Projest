@@ -9,7 +9,9 @@ export default function Register() {
     const navigate = useNavigate();
     const token = useAuthStore((state) => state.token);
     const setToken = useAuthStore((state) => state.setToken);
+
     const [errorMessage, setErrorMessage] = useState(null);
+    const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
 
     useEffect(() => {
         const verifyTokenAndRedirect = async () => {
@@ -33,8 +35,15 @@ export default function Register() {
             if (data.success) {
                 navigate('/login');
             } else {
-                const errorMsg = data.message?.includes('Email already exists') ? 'This email is already registered.' : 'An error occurred during registration. Please try again.';
-                setErrorMessage(errorMsg);
+                const { message, field } = data;
+                if (field) {
+                    setFieldErrors((prevErrors) => ({
+                        ...prevErrors,
+                        [field]: message,
+                    }));
+                } else {
+                    setErrorMessage(message || 'An unexpected error occurred. Please try again later.');
+                }
             }
         } catch (error) {
             console.error('Error registering user:', error);
@@ -45,6 +54,7 @@ export default function Register() {
     const handleSubmit = (e) => {
         e.preventDefault();
         setErrorMessage(null);
+        setFieldErrors({ email: "", password: "" });
 
         const formData = new FormData(e.target);
         const userData = {
@@ -69,7 +79,8 @@ export default function Register() {
                 <meta
                     name="description"
                     content="Connectez-vous à Projest pour accéder à vos projets, gérer vos tâches et collaborer efficacement avec votre équipe." />
-            </Helmet><main id="loginRegister">
+            </Helmet>
+            <main id="loginRegister">
                 <section id="logReg">
                     {errorMessage && <p className="errorMessage">{errorMessage}</p>}
                     <LoginRegisterForm
@@ -77,7 +88,8 @@ export default function Register() {
                         linkValue="Log in"
                         link="/login"
                         forgotPass="Forgot password ?"
-                        onSubmit={handleSubmit} // Passe la fonction de soumission comme prop
+                        onSubmit={handleSubmit}
+                        fieldErrors={fieldErrors}
                     />
                 </section>
             </main>
