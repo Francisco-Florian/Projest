@@ -1,0 +1,8 @@
+# Autorise tous les robots à explorer tout le site
+User-agent: *
+
+# Interdit l'accès au dossier d'uploads
+Disallow: /uploads/
+
+# Autorise l'accès au fichier sitemap
+Sitemap: http://localhost:5173/sitemap.xml
