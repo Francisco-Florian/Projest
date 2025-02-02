@@ -130,7 +130,6 @@ export default function ProjectList() {
                                         </div>
                                         <NavLink to={`/project/${project.id}`} className="viewDetails">
                                             <h3>{project.projectName}</h3>
-                                            <p>Due date: {new Date(project.deadline).toLocaleDateString()}</p>
                                         </NavLink>
                                     </article>
                                 ))}

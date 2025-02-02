@@ -167,3 +167,9 @@ a{
     }
 
 }
+
+@media screen and (max-width: 480px) {
+    #logReg form{
+        width: 250px;
+    }
+}

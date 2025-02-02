@@ -39,7 +39,6 @@ export default function ProjectCard({ refresh }) {
             {!isLoading && projects.length > 0 && projects.slice(0, 6).map((project) => (
                 <article key={project.id}>
                     <h3>{project.projectName}</h3>
-                    <p>Due date: {new Date(project.deadline).toLocaleDateString()}</p>
                 </article>
             ))}
             {!isLoading && projects.length === 0 && <p>No projects available</p>}
