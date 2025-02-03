@@ -43,7 +43,6 @@ const BurgerMenuLoggedIn = ({ onLogout, toggleBurgerMenu }) => {
             <ul>
                 <li><Link to="/" onClick={(e) => { scrollToSection(e, 'section1'); toggleBurgerMenu(); }}>Home</Link></li>
                 <li><Link to="/" onClick={(e) => { scrollToSection(e, 'section2'); toggleBurgerMenu(); }}>Features</Link></li>
-                <li><Link to="/" onClick={(e) => { scrollToSection(e, 'section4'); toggleBurgerMenu(); }}>Pricing</Link></li>
                 <li><Link to="/" onClick={(e) => { scrollToSection(e, 'footer'); toggleBurgerMenu(); }}>Contact</Link></li>
                 <li><Link to="/dashboard" onClick={toggleBurgerMenu}>Dashboard</Link></li>
                 <li><a href="#" onClick={(e) => { onLogout(e); toggleBurgerMenu(); }}>Log out</a></li>
@@ -117,7 +116,6 @@ const Home = () => {
                         <ul>
                             <li><Link to="/" onClick={(e) => scrollToSection(e, 'section1')}>Home</Link></li>
                             <li><Link to="/" onClick={(e) => scrollToSection(e, 'section2')}>Features</Link></li>
-                            <li><Link to="/" onClick={(e) => scrollToSection(e, 'section4')}>Pricing</Link></li>
                             <li><Link to="/" onClick={(e) => scrollToSection(e, 'footer')}>Contact</Link></li>
                         </ul>
                     </nav>
@@ -176,7 +174,7 @@ const Home = () => {
             <footer id="footerHome">
                 <ul>
                     <li><Link to="/privacy-policy">Privacy Policy</Link></li>
-                    <li><Link to="/terms-of-service">Terms of Service</Link></li>
+                    <li><Link to="/legal-mention">Legal Mentions</Link></li>
                     <li><Link to="/contact-us">Contact Us</Link></li>
                 </ul>
                 <p>© 2024 Projest. All rights reserved.</p>
