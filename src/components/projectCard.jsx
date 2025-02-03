@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useEffect, useState } from "react";
+import { NavLink } from 'react-router-dom';
 import { fetchProjects } from "../api/api";
 import useAuthStore from '../stores/authStore';
 
@@ -15,13 +16,10 @@ export default function ProjectCard({ refresh }) {
     useEffect(() => {
         const fetchProjectData = async () => {
             if (!token) return;
-
             setIsLoading(true);
             try {
                 const data = await fetchProjects(token);
-
                 const sortedProjects = data.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-
                 setProjects(sortedProjects);
             } catch (error) {
                 console.error('Error fetching project data:', error);
@@ -29,7 +27,6 @@ export default function ProjectCard({ refresh }) {
                 setIsLoading(false);
             }
         };
-
         fetchProjectData();
     }, [refresh, token]);
 
@@ -38,7 +35,9 @@ export default function ProjectCard({ refresh }) {
             {isLoading && <p>Loading projects...</p>}
             {!isLoading && projects.length > 0 && projects.slice(0, 6).map((project) => (
                 <article key={project.id}>
-                    <h3>{project.projectName}</h3>
+                    <NavLink to={`/project/${project.id}`} className="viewDetails">
+                        <h3>{project.projectName}</h3>
+                    </NavLink>
                 </article>
             ))}
             {!isLoading && projects.length === 0 && <p>No projects available</p>}
