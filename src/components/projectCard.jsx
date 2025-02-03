@@ -16,8 +16,8 @@ export default function ProjectCard({ refresh }) {
     useEffect(() => {
         const fetchProjectData = async () => {
             if (!token) return;
-            setIsLoading(true);
             try {
+                setIsLoading(true);
                 const data = await fetchProjects(token);
                 const sortedProjects = data.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
                 setProjects(sortedProjects);

@@ -146,7 +146,7 @@ const Home = () => {
                 <section id="section1">
                     <h2>Collaborate Effortlessly with Projest</h2>
                     <p>Manage your projects with ease and improve team collaboration with real-time updates, task tracking, and comprehensive project analytics.</p>
-                    <Link to="/get-started">Get Started</Link>
+                    <Link to="/dashboard">Get Started</Link>
                 </section>
 
                 <section id="section2">
@@ -155,7 +155,7 @@ const Home = () => {
                         <article className="section2Card">
                             <i className="fa-solid fa-list-check taskListIcone violet" />
                             <h3>Task Tracking</h3>
-                            <p>Keep track of all your tasks and ensure timely completion with our intuitive task tracking system.</p>
+                            <p>Keep track of all your tasks and ensure timely completion.</p>
                         </article>
                         <article className="section2Card">
                             <i className="fa-solid fa-users usersIcone violet" />
