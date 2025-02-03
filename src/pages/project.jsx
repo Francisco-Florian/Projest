@@ -49,8 +49,8 @@ function isColumnPlaceholder(item) {
 function TaskView({
   task = { id: null, taskName: '' },
   isPlaceholder = false,
-  onEditTask = () => {},
-  onDeleteTask = () => {},
+  onEditTask = () => { },
+  onDeleteTask = () => { },
 }) {
   const taskCardClass = `task-card ${isPlaceholder ? 'placeholder' : 'normal'}`;
   return (
@@ -84,8 +84,8 @@ function TaskView({
 function SortableTask({
   task,
   activeId = null,
-  onEditTask = () => {},
-  onDeleteTask = () => {},
+  onEditTask = () => { },
+  onDeleteTask = () => { },
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: task.id });
@@ -173,7 +173,7 @@ export default function ProjectPage() {
 
   // --- SENSORS ---
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 15 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 10 } })
   );
 
   // Vérification du token
@@ -409,6 +409,17 @@ export default function ProjectPage() {
     setModalError('');
   };
 
+
+  const handleEditTask = (task) => {
+    setModalType('taskEdit');
+    setActiveTask(task.id);
+    setNewItem(task.taskName);
+    setTaskDescription(task.description);
+    setTaskDeadline(task.taskDeadline);
+    setActiveColumn(task.columnId);
+    setIsModalOpen(true);
+  };
+
   // -------------------- DRAG & DROP --------------------
   function getDraggedItem(id) {
     if (id === PLACEHOLDER_TASK_ID || id === PLACEHOLDER_COLUMN_ID) return null;
@@ -437,399 +448,409 @@ export default function ProjectPage() {
     }
     // Si c'est une colonne, stocker l'indice d'origine et insérer un placeholder (avec tasks: [])
     else if (item?.taskColumnName) {
-        const newCols = [...columns];
-        const fromIndex = newCols.findIndex((c) => c.id === active.id);
-        if (fromIndex !== -1) {
-          // Stocker l'indice d'origine
-          draggedIndexRef.current = fromIndex;
-          newCols.splice(fromIndex, 1, { id: PLACEHOLDER_COLUMN_ID, tasks: [] });
-        }
-        setColumns(newCols);
-      }
-    };
-  
-    const handleDragOver = (event) => {
-      // Optionnel, pas de logique spéciale ici
-    };
-  
-    const handleDragEnd = async (event) => {
-      const { active, over } = event;
-      setActiveId(null);
-      if (!draggedItem) return;
-      const item = draggedItem;
       const newCols = [...columns];
-      // Retirer les placeholders dans les tâches
-      newCols.forEach((c) => {
-        c.tasks = c.tasks.filter((t) => t.id !== PLACEHOLDER_TASK_ID);
-      });
-      // Retirer le placeholder de colonne s'il existe
-      const placeholderIndex = newCols.findIndex((c) => c.id === PLACEHOLDER_COLUMN_ID);
-      if (placeholderIndex !== -1) {
-        newCols.splice(placeholderIndex, 1);
+      const fromIndex = newCols.findIndex((c) => c.id === active.id);
+      if (fromIndex !== -1) {
+        // Stocker l'indice d'origine
+        draggedIndexRef.current = fromIndex;
+        newCols.splice(fromIndex, 1, { id: PLACEHOLDER_COLUMN_ID, tasks: [] });
       }
-      if (!over) {
-        // Si aucune cible n'est trouvée, pour une tâche on la remet dans la première colonne
-        if (item.taskName) {
-          newCols[0].tasks.push(item);
-        }
-        // Pour une colonne, on réinsère à l'indice d'origine
-        else if (item.taskColumnName) {
-          if (draggedIndexRef.current !== null) {
-            newCols.splice(draggedIndexRef.current, 0, item);
-          } else {
-            newCols.push(item);
-          }
-        }
-        setDraggedItem(null);
-        setColumns(newCols);
-        draggedIndexRef.current = null;
-        return;
+      setColumns(newCols);
+    }
+  };
+
+  const handleDragOver = (event) => {
+    // Optionnel, pas de logique spéciale ici
+  };
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event;
+    setActiveId(null);
+    if (!draggedItem) return;
+    const item = draggedItem;
+    const newCols = [...columns];
+    // Retirer les placeholders dans les tâches
+    newCols.forEach((c) => {
+      c.tasks = c.tasks.filter((t) => t.id !== PLACEHOLDER_TASK_ID);
+    });
+    // Retirer le placeholder de colonne s'il existe
+    const placeholderIndex = newCols.findIndex((c) => c.id === PLACEHOLDER_COLUMN_ID);
+    if (placeholderIndex !== -1) {
+      newCols.splice(placeholderIndex, 1);
+    }
+    if (!over) {
+      // Si aucune cible n'est trouvée, pour une tâche on la remet dans la première colonne
+      if (item.taskName) {
+        newCols[0].tasks.push(item);
       }
-      const overId = over.id;
-      // Si on drop sur soi-même, annuler
-      if (overId === item.id) {
-        setDraggedItem(null);
-        setColumns(newCols);
-        draggedIndexRef.current = null;
-        return;
-      }
-      const columnIds = newCols.map((c) => c.id);
-      const taskIds = newCols.flatMap((c) => c.tasks.map((t) => t.id));
-      // CAS 1 : On déplace une COLONNE
-      if (item.taskColumnName) {
-        // On utilise la cible obtenue via overId
-        const toIndex = newCols.findIndex((c) => c.id === overId);
-        let newIndex = toIndex === -1 ? newCols.length : toIndex;
-        // Insérer la colonne draggée à la nouvelle position
-        newCols.splice(newIndex, 0, item);
-        // Réassigner les positions (1, 2, 3, ...)
-        newCols.forEach((col, i) => {
-          col.taskColumnPosition = i + 1;
-        });
-        setDraggedItem(null);
-        setColumns(newCols);
-        // Persister la nouvelle position de chaque colonne en base
-        for (const col of newCols) {
-          try {
-            await updateColumn(projectId, token, col.id, {
-              taskColumnName: col.taskColumnName,
-              taskColumnPosition: col.taskColumnPosition,
-            });
-          } catch (err) {
-            console.error('Error updating column position:', err);
-          }
-        }
-        draggedIndexRef.current = null;
-      }
-      // CAS 2 : On déplace une TÂCHE
-      else if (item.taskName) {
-        if (taskIds.includes(overId)) {
-          const toColIndex = newCols.findIndex((c) =>
-            c.tasks.some((t) => t.id === overId)
-          );
-          const toTaskIndex = newCols[toColIndex].tasks.findIndex(
-            (t) => t.id === overId
-          );
-          newCols[toColIndex].tasks.splice(toTaskIndex, 0, item);
-        } else if (columnIds.includes(overId)) {
-          const toColIndex = newCols.findIndex((c) => c.id === overId);
-          newCols[toColIndex].tasks.push(item);
+      // Pour une colonne, on réinsère à l'indice d'origine
+      else if (item.taskColumnName) {
+        if (draggedIndexRef.current !== null) {
+          newCols.splice(draggedIndexRef.current, 0, item);
         } else {
-          newCols[0].tasks.push(item);
+          newCols.push(item);
         }
-  
-        // Mettre à jour taskOrder et columnId de la tâche déplacée
-        const updatedTaskData = {
-          ...item,
-          columnId: newCols.find((c) => c.tasks.some((t) => t.id === item.id))?.id,
-          taskOrder: newCols.find((c) => c.tasks.some((t) => t.id === item.id))?.tasks.findIndex((t) => t.id === item.id) + 1,
-        };
-  
+      }
+      setDraggedItem(null);
+      setColumns(newCols);
+      draggedIndexRef.current = null;
+      return;
+    }
+    const overId = over.id;
+    // Si on drop sur soi-même, annuler
+    if (overId === item.id) {
+      setDraggedItem(null);
+      setColumns(newCols);
+      draggedIndexRef.current = null;
+      return;
+    }
+    const columnIds = newCols.map((c) => c.id);
+    const taskIds = newCols.flatMap((c) => c.tasks.map((t) => t.id));
+    // CAS 1 : On déplace une COLONNE
+    if (item.taskColumnName) {
+      // On utilise la cible obtenue via overId
+      const toIndex = newCols.findIndex((c) => c.id === overId);
+      let newIndex = toIndex === -1 ? newCols.length : toIndex;
+      // Insérer la colonne draggée à la nouvelle position
+      newCols.splice(newIndex, 0, item);
+      // Réassigner les positions (1, 2, 3, ...)
+      newCols.forEach((col, i) => {
+        col.taskColumnPosition = i + 1;
+      });
+      setDraggedItem(null);
+      setColumns(newCols);
+      // Persister la nouvelle position de chaque colonne en base
+      for (const col of newCols) {
         try {
-          await updateTask(projectId, item.columnId, item.id, token, updatedTaskData);
-        } catch (error) {
-          console.error('Error updating task:', error);
+          await updateColumn(projectId, token, col.id, {
+            taskColumnName: col.taskColumnName,
+            taskColumnPosition: col.taskColumnPosition,
+          });
+        } catch (err) {
+          console.error('Error updating column position:', err);
         }
-  
-        setDraggedItem(null);
-        setColumns(newCols);
       }
-    };
-  
-    const renderDragOverlay = () => {
-      if (!activeId || !draggedItem) return null;
-      const item = draggedItem;
-      if (item.taskColumnName) {
-        return null; // Pas d'overlay pour une colonne
-      } else if (item.taskName) {
-        return (
-          <div className="drag-overlay">
-            <TaskView task={item} isPlaceholder={false} />
-          </div>
+      draggedIndexRef.current = null;
+    }
+    // CAS 2 : On déplace une TÂCHE
+    else if (item.taskName) {
+      if (taskIds.includes(overId)) {
+        const toColIndex = newCols.findIndex((c) =>
+          c.tasks.some((t) => t.id === overId)
         );
+        const toTaskIndex = newCols[toColIndex].tasks.findIndex(
+          (t) => t.id === overId
+        );
+        newCols[toColIndex].tasks.splice(toTaskIndex, 0, item);
+      } else if (columnIds.includes(overId)) {
+        const toColIndex = newCols.findIndex((c) => c.id === overId);
+        newCols[toColIndex].tasks.push(item);
+      } else {
+        newCols[0].tasks.push(item);
       }
-      return null;
-    };
-  
-    if (isLoading) return <div className="loading">Loading...</div>;
-    if (pageError) return <div className="error-message">{pageError}</div>;
-    if (!project) return <div className="not-found">Project not found</div>;
-  
-    return (
-      <div className="project-page">
-        <Helmet>
-          <title>Projest - {project?.projectName}</title>
-          <meta
-            name="description"
-            content={`Organisez les tâches du projet "${project?.name}" avec Projest, une solution collaborative.`}
-          />
-        </Helmet>
-        <HeaderBoard />
-        <main id="projectMain">
-          <button className="burger-menu" onClick={toggleMenu} aria-label="Menu mobile">
-            <i className="fas fa-bars" />
+
+      // Mettre à jour taskOrder et columnId de la tâche déplacée
+      const updatedTaskData = {
+        ...item,
+        columnId: newCols.find((c) => c.tasks.some((t) => t.id === item.id))?.id,
+        taskOrder: newCols.find((c) => c.tasks.some((t) => t.id === item.id))?.tasks.findIndex((t) => t.id === item.id) + 1,
+      };
+
+      try {
+        await updateTask(projectId, item.columnId, item.id, token, updatedTaskData);
+      } catch (error) {
+        console.error('Error updating task:', error);
+      }
+
+      setDraggedItem(null);
+      setColumns(newCols);
+    }
+  };
+
+  const renderDragOverlay = () => {
+    if (!activeId || !draggedItem) return null;
+    const item = draggedItem;
+    if (item.taskColumnName) {
+      return null; // Pas d'overlay pour une colonne
+    } else if (item.taskName) {
+      return (
+        <div className="drag-overlay">
+          <TaskView task={item} isPlaceholder={false} />
+        </div>
+      );
+    }
+    return null;
+  };
+
+  if (isLoading) return <div className="loading">Loading...</div>;
+  if (pageError) return <div className="error-message">{pageError}</div>;
+  if (!project) return <div className="not-found">Project not found</div>;
+
+  return (
+    <div className="project-page">
+      <Helmet>
+        <title>Projest - {project?.projectName}</title>
+        <meta
+          name="description"
+          content={`Organisez les tâches du projet "${project?.name}" avec Projest, une solution collaborative.`}
+        />
+      </Helmet>
+      <HeaderBoard />
+      <main id="projectMain">
+        <button className="burger-menu" onClick={toggleMenu} aria-label="Menu mobile">
+          <i className="fas fa-bars" />
+        </button>
+        <div className={`project-nav ${menuOpen ? 'open' : ''}`}>
+          <NavMenu />
+        </div>
+        <section className="project-content">
+          <h2>{project?.name}</h2>
+          <p>{project?.description}</p>
+          <button
+            onClick={() => {
+              setModalType('column');
+              setIsModalOpen(true);
+            }}
+            className="add-column-button"
+          >
+            Add a column
           </button>
-          <div className={`project-nav ${menuOpen ? 'open' : ''}`}>
-            <NavMenu />
-          </div>
-          <section className="project-content">
-            <h2>{project?.name}</h2>
-            <p>{project?.description}</p>
-            <button
-              onClick={() => {
-                setModalType('column');
-                setIsModalOpen(true);
-              }}
-              className="add-column-button"
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => {
+              setActiveId(null);
+              setDraggedItem(null);
+            }}
+          >
+            <SortableContext
+              items={columns.map((c) => c.id)}
+              strategy={horizontalListSortingStrategy}
             >
-              Add a column
-            </button>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCorners}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-              onDragCancel={() => {
-                setActiveId(null);
-                setDraggedItem(null);
-              }}
-            >
-              <SortableContext
-                items={columns.map((c) => c.id)}
-                strategy={horizontalListSortingStrategy}
-              >
-                <div className="kanban-board">
-                  {columns.map((column) => {
-                    const isPlaceHolderCol = isColumnPlaceholder(column);
-                    if (isPlaceHolderCol) {
-                      return (
-                        <ColumnView key={column.id} column={column} isPlaceholder>
-                          <SortableContext
-                            items={column.tasks.map((t) => t.id)}
-                            strategy={verticalListSortingStrategy}
-                          >
-                            <div className="kanban-tasks">
-                              {column.tasks.map((t) => {
-                                if (isTaskPlaceholder(t)) {
-                                  return <TaskView key={t.id} task={{}} isPlaceholder />;
-                                }
-                                return null;
-                              })}
-                            </div>
-                          </SortableContext>
-                        </ColumnView>
-                      );
-                    } else {
-                      return (
-                        <SortableColumn key={column.id} column={column} isPlaceholder={false}>
-                          <div>
-                            <button
-                              onClick={() => {
-                                setModalType('task');
-                                setActiveColumn(column.id);
-                                setIsModalOpen(true);
-                              }}
-                              className="add-task-button"
-                              aria-label={`Add task to ${column.taskColumnName}`}
-                            >
-                              <i className="fas fa-plus" />
-                            </button>
-                            <button
-                              className="rename-column-button"
-                              onClick={() => {
-                                setModalType('columnEdit');
-                                setActiveColumn(column.id);
-                                setNewItem(column.taskColumnName);
-                                setIsModalOpen(true);
-                              }}
-                              aria-label={`Rename ${column.taskColumnName}`}
-                            >
-                              <i className="fa-regular fa-pen-to-square" />
-                            </button>
-                            <button
-                              className="delete-column-button"
-                              aria-label={`Delete ${column.taskColumnName}`}
-                              onClick={() => {
-                                setIsDeleteModalOpen(true);
-                                setModalType('column');
-                                setActiveColumn(column.id);
-                              }}
-                            >
-                              <i className="fas fa-trash" />
-                            </button>
+              <div className="kanban-board">
+                {columns.map((column) => {
+                  const isPlaceHolderCol = isColumnPlaceholder(column);
+                  if (isPlaceHolderCol) {
+                    return (
+                      <ColumnView key={column.id} column={column} isPlaceholder>
+                        <SortableContext
+                          items={column.tasks.map((t) => t.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="kanban-tasks">
+                            {column.tasks.map((t) => {
+                              if (isTaskPlaceholder(t)) {
+                                return <TaskView key={t.id} task={{}} isPlaceholder />;
+                              }
+                              return null;
+                            })}
                           </div>
-                          <SortableContext
-                            items={column.tasks.map((t) => t.id)}
-                            strategy={verticalListSortingStrategy}
+                        </SortableContext>
+                      </ColumnView>
+                    );
+                  } else {
+                    return (
+                      <SortableColumn key={column.id} column={column} isPlaceholder={false}>
+                        <div>
+                          <button
+                            onClick={() => {
+                              setModalType('task');
+                              setActiveColumn(column.id);
+                              setIsModalOpen(true);
+                            }}
+                            className="add-task-button"
+                            aria-label={`Add task to ${column.taskColumnName}`}
                           >
-                            <div className="kanban-tasks">
-                              {column.tasks.map((task) => {
-                                if (isTaskPlaceholder(task)) {
-                                  return <TaskView key={task.id} task={{}} isPlaceholder />;
-                                }
-                                return <SortableTask key={task.id} task={task} />;
-                              })}
-                            </div>
-                          </SortableContext>
-                        </SortableColumn>
-                      );
-                    }
-                  })}
-                </div>
-              </SortableContext>
-              <DragOverlay>{renderDragOverlay()}</DragOverlay>
-            </DndContext>
-          </section>
-        </main>
-        {/* Modales : Add/rename/delete (inchangées) */}
-        {isModalOpen && modalType !== 'taskEdit' && modalType !== 'columnEdit' && (
-          <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>{modalType === 'task' ? 'Add a new task' : 'Add a new column'}</h3>
-              {modalError && <div className="modal-error">{modalError}</div>}
-              <form onSubmit={handleNewItemSubmit} className="new-item-form">
-                <input
-                  type="text"
-                  value={newItem}
-                  onChange={(e) => setNewItem(e.target.value)}
-                  placeholder={modalType === 'task' ? 'Enter a new task' : 'Enter the column name'}
-                  className="new-item-input"
-                />
-                <button type="submit" className="new-item-button">
-                  Add
-                </button>
-              </form>
-              <button onClick={closeModal} className="close-modal-button">
-                Close
-              </button>
-            </div>
-          </div>
-        )}
-        {isDeleteModalOpen && (
-          <div className="confirmDeleteModal">
-            <div className="modal-overlay" onClick={closeModal}>
-              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <h3>Confirm deletion</h3>
-                <p>
-                  Are you sure you want to delete this {modalType === 'task' ? 'task' : 'column'}?
-                </p>
-                <button
-                  className="delete-modal-button"
-                  onClick={() => {
-                    if (modalType === 'column') {
-                      handleDeleteColumn();
-                    } else if (modalType === 'task') {
-                      handleDeleteTask();
-                    }
-                  }}
-                >
-                  Delete
-                </button>
-                <button className="close-modal-button" onClick={closeModal}>
-                  Cancel
-                </button>
+                            <i className="fas fa-plus" />
+                          </button>
+                          <button
+                            className="rename-column-button"
+                            onClick={() => {
+                              setModalType('columnEdit');
+                              setActiveColumn(column.id);
+                              setNewItem(column.taskColumnName);
+                              setIsModalOpen(true);
+                            }}
+                            aria-label={`Rename ${column.taskColumnName}`}
+                          >
+                            <i className="fa-regular fa-pen-to-square" />
+                          </button>
+                          <button
+                            className="delete-column-button"
+                            aria-label={`Delete ${column.taskColumnName}`}
+                            onClick={() => {
+                              setIsDeleteModalOpen(true);
+                              setModalType('column');
+                              setActiveColumn(column.id);
+                            }}
+                          >
+                            <i className="fas fa-trash" />
+                          </button>
+                        </div>
+                        <SortableContext
+                          items={column.tasks.map((t) => t.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="kanban-tasks">
+                            {column.tasks.map((task) => {
+                              if (isTaskPlaceholder(task)) {
+                                return <TaskView key={task.id} task={{}} isPlaceholder />;
+                              }
+                              return <SortableTask
+                                key={task.id}
+                                task={task}
+                                onEditTask={handleEditTask}
+                                onDeleteTask={() => {
+                                  setIsDeleteModalOpen(true);
+                                  setModalType('task');
+                                  setActiveTask(task.id);
+                                  setActiveColumn(column.id);
+                                }}
+                              />;
+                            })}
+                          </div>
+                        </SortableContext>
+                      </SortableColumn>
+                    );
+                  }
+                })}
               </div>
-            </div>
+            </SortableContext>
+            <DragOverlay>{renderDragOverlay()}</DragOverlay>
+          </DndContext>
+        </section>
+      </main>
+      {/* Modales : Add/rename/delete (inchangées) */}
+      {isModalOpen && modalType !== 'taskEdit' && modalType !== 'columnEdit' && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{modalType === 'task' ? 'Add a new task' : 'Add a new column'}</h3>
+            {modalError && <div className="modal-error">{modalError}</div>}
+            <form onSubmit={handleNewItemSubmit} className="new-item-form">
+              <input
+                type="text"
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder={modalType === 'task' ? 'Enter a new task' : 'Enter the column name'}
+                className="new-item-input"
+              />
+              <button type="submit" className="new-item-button">
+                Add
+              </button>
+            </form>
+            <button onClick={closeModal} className="close-modal-button">
+              Close
+            </button>
           </div>
-        )}
-        {isModalOpen && modalType === 'columnEdit' && (
+        </div>
+      )}
+      {isDeleteModalOpen && (
+        <div className="confirmDeleteModal">
           <div className="modal-overlay" onClick={closeModal}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>Rename Column</h3>
-              {modalError && <div className="modal-error">{modalError}</div>}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleUpdateColumn();
+              <h3>Confirm deletion</h3>
+              <p>
+                Are you sure you want to delete this {modalType === 'task' ? 'task' : 'column'}?
+              </p>
+              <button
+                className="delete-modal-button"
+                onClick={() => {
+                  if (modalType === 'column') {
+                    handleDeleteColumn();
+                  } else if (modalType === 'task') {
+                    handleDeleteTask();
+                  }
                 }}
-                className="new-item-form"
               >
-                <input
-                  type="text"
-                  value={newItem}
-                  onChange={(e) => setNewItem(e.target.value)}
-                  placeholder="Enter the new column name"
-                  className="new-item-input"
-                />
-                <button type="submit" className="new-item-button">
-                  Update Column
-                </button>
-              </form>
-              <button onClick={closeModal} className="close-modal-button">
-                Close
+                Delete
+              </button>
+              <button className="close-modal-button" onClick={closeModal}>
+                Cancel
               </button>
             </div>
           </div>
-        )}
-        {isModalOpen && modalType === 'taskEdit' && (
-          <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>Edit Task</h3>
-              {modalError && <div className="modal-error">{modalError}</div>}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleUpdateTask();
-                }}
-                className="new-item-form"
+        </div>
+      )}
+      {isModalOpen && modalType === 'columnEdit' && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Rename Column</h3>
+            {modalError && <div className="modal-error">{modalError}</div>}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleUpdateColumn();
+              }}
+              className="new-item-form"
+            >
+              <input
+                type="text"
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Enter the new column name"
+                className="new-item-input"
+              />
+              <button type="submit" className="new-item-button">
+                Update Column
+              </button>
+            </form>
+            <button onClick={closeModal} className="close-modal-button">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {isModalOpen && modalType === 'taskEdit' && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Edit Task</h3>
+            {modalError && <div className="modal-error">{modalError}</div>}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleUpdateTask();
+              }}
+              className="new-item-form"
+            >
+              <input
+                type="text"
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Enter the updated task name"
+                className="new-item-input"
+              />
+              <textarea
+                rows={10}
+                value={taskDescription}
+                onChange={(e) => setTaskDescription(e.target.value)}
+                placeholder="Enter the updated description"
+                className="new-item-input"
+              />
+              <input
+                type="date"
+                value={taskDeadline}
+                onChange={(e) => setTaskDeadline(e.target.value)}
+                className="new-item-input"
+              />
+              <select
+                value={activeColumn}
+                onChange={(e) => setActiveColumn(parseInt(e.target.value, 10))}
+                className="column-select"
               >
-                <input
-                  type="text"
-                  value={newItem}
-                  onChange={(e) => setNewItem(e.target.value)}
-                  placeholder="Enter the updated task name"
-                  className="new-item-input"
-                />
-                <textarea
-                  rows={10}
-                  value={taskDescription}
-                  onChange={(e) => setTaskDescription(e.target.value)}
-                  placeholder="Enter the updated description"
-                  className="new-item-input"
-                />
-                <input
-                  type="date"
-                  value={taskDeadline}
-                  onChange={(e) => setTaskDeadline(e.target.value)}
-                  className="new-item-input"
-                />
-                <select
-                  value={activeColumn}
-                  onChange={(e) => setActiveColumn(parseInt(e.target.value, 10))}
-                  className="column-select"
-                >
-                  {columns.map((column) => (
-                    <option key={column.id} value={column.id}>
-                      {column.taskColumnName}
-                    </option>
-                  ))}
-                </select>
-                <button type="submit" className="new-item-button">
-                  Update Task
-                </button>
-              </form>
-              <button onClick={closeModal} className="close-modal-button">
+                {columns.map((column) => (
+                  <option key={column.id} value={column.id}>
+                    {column.taskColumnName}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" className="new-item-button">
+                Update Task
+              </button>
+            </form>
+            <button onClick={closeModal} className="close-modal-button">
               Close
             </button>
           </div>
